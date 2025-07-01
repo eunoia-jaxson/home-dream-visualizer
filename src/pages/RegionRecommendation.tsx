@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MapPin, Star, TrendingUp, Car, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
+import KakaoMap from "@/components/KakaoMap";
 
 const RegionRecommendation = () => {
   const [formData, setFormData] = useState({
@@ -43,7 +43,8 @@ const RegionRecommendation = () => {
         matchScore: 92,
         highlights: ["우수한 교육환경", "판교 테크노밸리 인근", "분당선 접근성"],
         schools: ["분당중앙고", "분당경영고", "분당대진고"],
-        facilities: ["분당서울대병원", "야탑역 상권", "중앙공원"]
+        facilities: ["분당서울대병원", "야탑역 상권", "중앙공원"],
+        coordinates: { lat: 37.3595, lng: 127.1052 }
       },
       {
         name: "용인시 수지구",
@@ -55,7 +56,8 @@ const RegionRecommendation = () => {
         matchScore: 87,
         highlights: ["교육 특구", "신분당선 연장", "상대적 저렴한 가격"],
         schools: ["수지고", "풍덕고", "상현고"],
-        facilities: ["수지구청", "동천역 상권", "수지레스피아"]
+        facilities: ["수지구청", "동천역 상권", "수지레스피아"],
+        coordinates: { lat: 37.3217, lng: 127.0928 }
       },
       {
         name: "인천시 연수구",
@@ -67,7 +69,8 @@ const RegionRecommendation = () => {
         matchScore: 84,
         highlights: ["송도국제도시", "인천공항 접근성", "계획도시"],
         schools: ["연수고", "송도고", "채드윅국제학교"],
-        facilities: ["송도컨벤시아", "센트럴파크", "연수구청"]
+        facilities: ["송도컨벤시아", "센트럴파크", "연수구청"],
+        coordinates: { lat: 37.4106, lng: 126.6779 }
       }
     ];
 
@@ -196,24 +199,30 @@ const RegionRecommendation = () => {
             </CardContent>
           </Card>
 
-          {/* Map Placeholder */}
+          {/* Map */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <MapPin className="h-5 w-5 text-blue-600" />
-                <span>지역 분포도</span>
+                <span>추천 지역 지도</span>
               </CardTitle>
               <CardDescription>
                 추천 지역의 위치와 특성
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600">지역 추천 후 지도가 표시됩니다</p>
+              {showResults ? (
+                <div className="h-80">
+                  <KakaoMap recommendations={recommendations} />
                 </div>
-              </div>
+              ) : (
+                <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <div className="text-center">
+                    <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600">지역 추천 후 지도가 표시됩니다</p>
+                  </div>
+                </div>
+              )}
               
               {showResults && (
                 <div className="mt-4 space-y-2">
