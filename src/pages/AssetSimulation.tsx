@@ -35,15 +35,15 @@ const AssetSimulation = () => {
     const savings = income - expense;
     
     const data = [];
-    let currentAmount = currentAssets;
+    let currentAmount = currentAssets * 10000; // 만원을 원 단위로 변환
     
     for (let year = 0; year <= 10; year++) {
       data.push({
         year: year === 0 ? "현재" : `${year}년 후`,
-        assets: Math.round(currentAmount / 10000),
-        canBuy: currentAmount >= 300000000 ? "구매 가능" : "저축 필요"
+        assets: Math.round(currentAmount / 10000), // 다시 만원 단위로 표시
+        canBuy: currentAmount >= 30000 * 10000 ? "구매 가능" : "저축 필요" // 3억원 기준
       });
-      currentAmount += savings * 12;
+      currentAmount += savings * 12 * 10000; // 연간 저축액을 원 단위로 추가
     }
     
     setSimulationData(data);
@@ -168,7 +168,10 @@ const AssetSimulation = () => {
                     <LineChart data={simulationData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="year" />
-                      <YAxis />
+                      <YAxis 
+                        tickFormatter={(value) => `${value}만원`}
+                        label={{ value: '자산 (만원)', angle: -90, position: 'insideLeft' }}
+                      />
                       <Tooltip 
                         formatter={(value) => [`${value}만원`, "자산"]}
                         labelFormatter={(label) => `시점: ${label}`}
@@ -187,11 +190,11 @@ const AssetSimulation = () => {
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h4 className="font-semibold text-blue-800 mb-3">구매 가능 시점</h4>
                   <div className="space-y-2">
-                    {simulationData.find(d => d.assets >= 3000) ? (
+                    {simulationData.find(d => d.assets >= 30000) ? (
                       <p className="text-blue-700">
                         <span className="font-bold">
-                          약 {simulationData.findIndex(d => d.assets >= 3000)}년 후
-                        </span> 주택 구매 가능
+                          약 {simulationData.findIndex(d => d.assets >= 30000)}년 후
+                        </span> 주택 구매 가능 (3억원 기준)
                       </p>
                     ) : (
                       <p className="text-blue-700">
