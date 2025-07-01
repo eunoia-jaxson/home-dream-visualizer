@@ -8,9 +8,22 @@ interface KakaoMapProps {
   }>;
 }
 
+// Kakao Maps API 타입 선언
 declare global {
   interface Window {
-    kakao: any;
+    kakao: {
+      maps: {
+        load: (callback: () => void) => void;
+        LatLng: new (lat: number, lng: number) => any;
+        Map: new (container: HTMLElement, options: any) => any;
+        Marker: new (options: any) => any;
+        InfoWindow: new (options: any) => any;
+        LatLngBounds: new () => any;
+        event: {
+          addListener: (target: any, type: string, handler: () => void) => void;
+        };
+      };
+    };
   }
 }
 
@@ -60,7 +73,7 @@ const KakaoMap = ({ recommendations }: KakaoMapProps) => {
     if (!mapRef.current) return;
 
     // 기본 좌표 설정 (실제로는 API에서 받아와야 함)
-    const regionCoordinates = {
+    const regionCoordinates: Record<string, { lat: number; lng: number }> = {
       "성남시 분당구": { lat: 37.3595, lng: 127.1052 },
       "용인시 수지구": { lat: 37.3217, lng: 127.0928 },
       "인천시 연수구": { lat: 37.4106, lng: 126.6779 }
@@ -68,8 +81,8 @@ const KakaoMap = ({ recommendations }: KakaoMapProps) => {
 
     const bounds = new window.kakao.maps.LatLngBounds();
 
-    recommendations.forEach((region, index) => {
-      const coords = regionCoordinates[region.name as keyof typeof regionCoordinates];
+    recommendations.forEach((region) => {
+      const coords = regionCoordinates[region.name];
       if (!coords) return;
 
       const position = new window.kakao.maps.LatLng(coords.lat, coords.lng);
