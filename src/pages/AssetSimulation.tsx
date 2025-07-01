@@ -163,18 +163,28 @@ const AssetSimulation = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-64 mb-6">
+                <div className="h-80 mb-6 pl-4">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={simulationData}>
+                    <LineChart data={simulationData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="year" />
+                      <XAxis 
+                        dataKey="year" 
+                        tick={{ fontSize: 12 }}
+                      />
                       <YAxis 
                         tickFormatter={(value) => `${value}만원`}
-                        label={{ value: '자산 (만원)', angle: -90, position: 'insideLeft' }}
+                        tick={{ fontSize: 12 }}
+                        width={80}
                       />
                       <Tooltip 
                         formatter={(value) => [`${value}만원`, "자산"]}
                         labelFormatter={(label) => `시점: ${label}`}
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          fontSize: '12px'
+                        }}
                       />
                       <Line 
                         type="monotone" 
@@ -182,6 +192,7 @@ const AssetSimulation = () => {
                         stroke="#16a34a" 
                         strokeWidth={3}
                         dot={{ fill: "#16a34a", strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, stroke: "#16a34a", strokeWidth: 2 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
