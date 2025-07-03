@@ -161,6 +161,61 @@ const SubscriptionCalculator = () => {
     }));
   };
 
+  // 만원 단위를 읽기 쉬운 형태로 변환하는 함수
+  const formatCurrency = (amount: string | number) => {
+    const num = typeof amount === 'string' ? parseInt(amount) : amount;
+    if (!num || num === 0) return '';
+
+    if (num >= 100000000) {
+      // 1조 이상 (100,000,000만원 = 1조)
+      const jo = Math.floor(num / 100000000);
+      const remainder = num % 100000000;
+
+      if (remainder === 0) {
+        return `${jo}조원`;
+      } else if (remainder >= 10000) {
+        const eok = Math.floor(remainder / 10000);
+        const eokRemainder = remainder % 10000;
+        if (eokRemainder === 0) {
+          return `${jo}조 ${eok}억원`;
+        } else {
+          return `${jo}조 ${eok}억 ${eokRemainder}만원`;
+        }
+      } else {
+        return `${jo}조 ${remainder}만원`;
+      }
+    } else if (num >= 10000) {
+      // 1억 이상
+      const eok = Math.floor(num / 10000);
+      const remainder = num % 10000;
+
+      if (remainder === 0) {
+        return `${eok}억원`;
+      } else if (remainder >= 1000) {
+        const thousand = Math.floor(remainder / 1000);
+        const remaining = remainder % 1000;
+        if (remaining === 0) {
+          return `${eok}억 ${thousand}천만원`;
+        } else {
+          return `${eok}억 ${remainder}만원`;
+        }
+      } else {
+        return `${eok}억 ${remainder}만원`;
+      }
+    } else if (num >= 1000) {
+      // 1천만 이상
+      const thousand = Math.floor(num / 1000);
+      const remainder = num % 1000;
+      if (remainder === 0) {
+        return `${thousand}천만원`;
+      } else {
+        return `${thousand}천 ${remainder}만원`;
+      }
+    } else {
+      return `${num}만원`;
+    }
+  };
+
   const calculateGeneralScore = () => {
     let score = 0;
 
@@ -441,6 +496,11 @@ const SubscriptionCalculator = () => {
                   handleInputChange('monthlyIncome', e.target.value)
                 }
               />
+              {formData.monthlyIncome && (
+                <p className="text-sm text-blue-600 font-medium">
+                  💰 {formatCurrency(formData.monthlyIncome)}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="totalAssets">총자산 (만원)</Label>
@@ -453,6 +513,11 @@ const SubscriptionCalculator = () => {
                   handleInputChange('totalAssets', e.target.value)
                 }
               />
+              {formData.totalAssets && (
+                <p className="text-sm text-green-600 font-medium">
+                  💎 {formatCurrency(formData.totalAssets)}
+                </p>
+              )}
             </div>
           </>
         )}

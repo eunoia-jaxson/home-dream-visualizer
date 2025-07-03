@@ -68,6 +68,14 @@ interface ScenarioConfig {
   color: string;
 }
 
+interface ScenarioData {
+  assets: number;
+  income: number;
+  expense: number;
+  savings: number;
+  canBuy: boolean;
+}
+
 const AssetSimulation = () => {
   const [formData, setFormData] = useState({
     monthlyIncome: '',
@@ -123,6 +131,61 @@ const AssetSimulation = () => {
     }));
   };
 
+  // 만원 단위를 읽기 쉬운 형태로 변환하는 함수
+  const formatCurrency = (amount: string) => {
+    const num = parseInt(amount);
+    if (!num || num === 0) return '';
+
+    if (num >= 100000000) {
+      // 1조 이상 (100,000,000만원 = 1조)
+      const jo = Math.floor(num / 100000000);
+      const remainder = num % 100000000;
+
+      if (remainder === 0) {
+        return `${jo}조원`;
+      } else if (remainder >= 10000) {
+        const eok = Math.floor(remainder / 10000);
+        const eokRemainder = remainder % 10000;
+        if (eokRemainder === 0) {
+          return `${jo}조 ${eok}억원`;
+        } else {
+          return `${jo}조 ${eok}억 ${eokRemainder}만원`;
+        }
+      } else {
+        return `${jo}조 ${remainder}만원`;
+      }
+    } else if (num >= 10000) {
+      // 1억 이상
+      const eok = Math.floor(num / 10000);
+      const remainder = num % 10000;
+
+      if (remainder === 0) {
+        return `${eok}억원`;
+      } else if (remainder >= 1000) {
+        const thousand = Math.floor(remainder / 1000);
+        const remaining = remainder % 1000;
+        if (remaining === 0) {
+          return `${eok}억 ${thousand}천만원`;
+        } else {
+          return `${eok}억 ${remainder}만원`;
+        }
+      } else {
+        return `${eok}억 ${remainder}만원`;
+      }
+    } else if (num >= 1000) {
+      // 1천만 이상
+      const thousand = Math.floor(num / 1000);
+      const remainder = num % 1000;
+      if (remainder === 0) {
+        return `${thousand}천만원`;
+      } else {
+        return `${thousand}천 ${remainder}만원`;
+      }
+    } else {
+      return `${num}만원`;
+    }
+  };
+
   const generateDetailedSimulation = () => {
     const income = parseInt(formData.monthlyIncome) || 0;
     const expense = parseInt(formData.monthlyExpense) || 0;
@@ -149,7 +212,7 @@ const AssetSimulation = () => {
 
     for (let year = 0; year <= 15; year++) {
       // 각 시나리오별 계산
-      const scenarios_data: Record<string, any> = {};
+      const scenarios_data: Record<string, ScenarioData> = {};
 
       Object.entries(scenarios).forEach(([key, scenario]) => {
         // 사용자 설정값을 기준으로 시나리오 조정
@@ -380,6 +443,11 @@ const AssetSimulation = () => {
                         handleInputChange('monthlyIncome', e.target.value)
                       }
                     />
+                    {formData.monthlyIncome && (
+                      <p className="text-sm text-blue-600 font-medium">
+                        💰 {formatCurrency(formData.monthlyIncome)}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -393,6 +461,11 @@ const AssetSimulation = () => {
                         handleInputChange('monthlyExpense', e.target.value)
                       }
                     />
+                    {formData.monthlyExpense && (
+                      <p className="text-sm text-red-600 font-medium">
+                        💸 {formatCurrency(formData.monthlyExpense)}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -407,6 +480,11 @@ const AssetSimulation = () => {
                       handleInputChange('currentAssets', e.target.value)
                     }
                   />
+                  {formData.currentAssets && (
+                    <p className="text-sm text-blue-600 font-medium">
+                      💰 {formatCurrency(formData.currentAssets)}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -422,6 +500,11 @@ const AssetSimulation = () => {
                       handleInputChange('targetHousePrice', e.target.value)
                     }
                   />
+                  {formData.targetHousePrice && (
+                    <p className="text-sm text-green-600 font-medium">
+                      🏠 {formatCurrency(formData.targetHousePrice)}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -597,25 +680,49 @@ const AssetSimulation = () => {
                 <h4 className="font-semibold text-green-800 mb-2">
                   현재 월 저축액
                 </h4>
-                <p className="text-2xl font-bold text-green-600">
-                  {formData.monthlyIncome && formData.monthlyExpense
-                    ? `${
-                        parseInt(formData.monthlyIncome) -
-                        parseInt(formData.monthlyExpense)
-                      }만원`
-                    : '0만원'}
-                </p>
-                <p className="text-sm text-green-700 mt-1">
-                  연간{' '}
-                  {formData.monthlyIncome && formData.monthlyExpense
-                    ? `${
-                        (parseInt(formData.monthlyIncome) -
-                          parseInt(formData.monthlyExpense)) *
-                        12
-                      }만원`
-                    : '0만원'}{' '}
-                  저축 가능
-                </p>
+                <div className="space-y-2">
+                  <p className="text-2xl font-bold text-green-600">
+                    {formData.monthlyIncome && formData.monthlyExpense
+                      ? `${
+                          parseInt(formData.monthlyIncome) -
+                          parseInt(formData.monthlyExpense)
+                        }만원`
+                      : '0만원'}
+                  </p>
+                  {formData.monthlyIncome &&
+                    formData.monthlyExpense &&
+                    parseInt(formData.monthlyIncome) -
+                      parseInt(formData.monthlyExpense) >
+                      0 && (
+                      <p className="text-sm text-green-700">
+                        💵 월 저축:{' '}
+                        {formatCurrency(
+                          String(
+                            parseInt(formData.monthlyIncome) -
+                              parseInt(formData.monthlyExpense)
+                          )
+                        )}{' '}
+                        <br />
+                        📈 연간 저축:{' '}
+                        {formatCurrency(
+                          String(
+                            (parseInt(formData.monthlyIncome) -
+                              parseInt(formData.monthlyExpense)) *
+                              12
+                          )
+                        )}
+                      </p>
+                    )}
+                  {formData.monthlyIncome &&
+                    formData.monthlyExpense &&
+                    parseInt(formData.monthlyIncome) -
+                      parseInt(formData.monthlyExpense) <=
+                      0 && (
+                      <p className="text-sm text-red-600">
+                        ⚠️ 지출이 수입보다 많습니다. 가계부를 다시 확인해주세요.
+                      </p>
+                    )}
+                </div>
               </div>
 
               <Button
@@ -830,24 +937,34 @@ const AssetSimulation = () => {
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="year" tick={{ fontSize: 12 }} />
                             <YAxis
-                              tickFormatter={(value) =>
-                                `${(value / 10000).toFixed(1)}억`
-                              }
+                              tickFormatter={(value) => {
+                                if (value >= 100000000) {
+                                  return `${(value / 100000000).toFixed(1)}조`;
+                                } else if (value >= 10000) {
+                                  return `${(value / 10000).toFixed(1)}억`;
+                                } else if (value >= 1000) {
+                                  return `${(value / 1000).toFixed(1)}천만`;
+                                } else {
+                                  return `${value}만`;
+                                }
+                              }}
                               tick={{ fontSize: 12 }}
                               width={80}
                             />
                             <Tooltip
                               formatter={(value, name) => {
-                                if (name === 'assets')
-                                  return [
-                                    `${value.toLocaleString()}만원`,
-                                    '총 자산',
-                                  ];
-                                if (name === 'savings')
-                                  return [
-                                    `${value.toLocaleString()}만원`,
-                                    '월 저축',
-                                  ];
+                                if (name === 'assets') {
+                                  const formattedValue =
+                                    formatCurrency(String(value)) ||
+                                    `${value.toLocaleString()}만원`;
+                                  return [formattedValue, '총 자산'];
+                                }
+                                if (name === 'savings') {
+                                  const formattedValue =
+                                    formatCurrency(String(value)) ||
+                                    `${value.toLocaleString()}만원`;
+                                  return [formattedValue, '월 저축'];
+                                }
                                 return [value, name];
                               }}
                               labelFormatter={(label) => `시점: ${label}`}
@@ -893,10 +1010,12 @@ const AssetSimulation = () => {
                     <ResponsiveContainer width="100%" height="100%">
                       <RechartsPieChart>
                         <Tooltip
-                          formatter={(value, name) => [
-                            `${value.toLocaleString()}만원`,
-                            name,
-                          ]}
+                          formatter={(value, name) => {
+                            const formattedValue =
+                              formatCurrency(String(value)) ||
+                              `${value.toLocaleString()}만원`;
+                            return [formattedValue, name];
+                          }}
                         />
                         <RechartsPieChart
                           dataKey="value"
@@ -927,7 +1046,8 @@ const AssetSimulation = () => {
                           <span className="text-sm">{item.name}</span>
                         </div>
                         <span className="font-semibold">
-                          {item.value.toLocaleString()}만원
+                          {formatCurrency(String(item.value)) ||
+                            `${item.value.toLocaleString()}만원`}
                         </span>
                       </div>
                     ))}
@@ -952,15 +1072,30 @@ const AssetSimulation = () => {
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="year" tick={{ fontSize: 12 }} />
                         <YAxis
-                          tickFormatter={(value) => `${value}만원`}
+                          tickFormatter={(value) => {
+                            if (value >= 100000000) {
+                              return `${(value / 100000000).toFixed(1)}조`;
+                            } else if (value >= 10000) {
+                              return `${(value / 10000).toFixed(1)}억`;
+                            } else if (value >= 1000) {
+                              return `${(value / 1000).toFixed(1)}천만`;
+                            } else {
+                              return `${value}만`;
+                            }
+                          }}
                           tick={{ fontSize: 12 }}
                           width={80}
                         />
                         <Tooltip
-                          formatter={(value, name) => [
-                            `${value.toLocaleString()}만원`,
-                            name === 'income' ? '월 수입' : '월 지출',
-                          ]}
+                          formatter={(value, name) => {
+                            const formattedValue =
+                              formatCurrency(String(value)) ||
+                              `${value.toLocaleString()}만원`;
+                            return [
+                              formattedValue,
+                              name === 'income' ? '월 수입' : '월 지출',
+                            ];
+                          }}
                         />
                         <Bar dataKey="income" fill="#10b981" name="income" />
                         <Bar dataKey="expense" fill="#ef4444" name="expense" />

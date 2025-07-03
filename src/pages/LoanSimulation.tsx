@@ -143,6 +143,61 @@ const LoanSimulation = () => {
     }));
   };
 
+  // 만원 단위를 읽기 쉬운 형태로 변환하는 함수
+  const formatCurrency = (amount: string | number) => {
+    const num = typeof amount === 'string' ? parseInt(amount) : amount;
+    if (!num || num === 0) return '';
+
+    if (num >= 100000000) {
+      // 1조 이상 (100,000,000만원 = 1조)
+      const jo = Math.floor(num / 100000000);
+      const remainder = num % 100000000;
+
+      if (remainder === 0) {
+        return `${jo}조원`;
+      } else if (remainder >= 10000) {
+        const eok = Math.floor(remainder / 10000);
+        const eokRemainder = remainder % 10000;
+        if (eokRemainder === 0) {
+          return `${jo}조 ${eok}억원`;
+        } else {
+          return `${jo}조 ${eok}억 ${eokRemainder}만원`;
+        }
+      } else {
+        return `${jo}조 ${remainder}만원`;
+      }
+    } else if (num >= 10000) {
+      // 1억 이상
+      const eok = Math.floor(num / 10000);
+      const remainder = num % 10000;
+
+      if (remainder === 0) {
+        return `${eok}억원`;
+      } else if (remainder >= 1000) {
+        const thousand = Math.floor(remainder / 1000);
+        const remaining = remainder % 1000;
+        if (remaining === 0) {
+          return `${eok}억 ${thousand}천만원`;
+        } else {
+          return `${eok}억 ${remainder}만원`;
+        }
+      } else {
+        return `${eok}억 ${remainder}만원`;
+      }
+    } else if (num >= 1000) {
+      // 1천만 이상
+      const thousand = Math.floor(num / 1000);
+      const remainder = num % 1000;
+      if (remainder === 0) {
+        return `${thousand}천만원`;
+      } else {
+        return `${thousand}천 ${remainder}만원`;
+      }
+    } else {
+      return `${num}만원`;
+    }
+  };
+
   // DSR/DTI 계산 함수
   const calculateDSR = (
     monthlyIncome: number,
@@ -419,9 +474,9 @@ const LoanSimulation = () => {
       const annualIncomeLimit = getIncomeLimit(loan.id);
       if (annualIncomeLimit && annualIncome > annualIncomeLimit) {
         eligible = false;
-        reason = `소득 조건 미충족 (연 ${(
+        reason = `소득 조건 미충족 (연 ${formatCurrency(
           annualIncomeLimit / 10000
-        ).toLocaleString()}만원 이하)`;
+        )} 이하)`;
       }
 
       // 무주택 조건
@@ -551,6 +606,11 @@ const LoanSimulation = () => {
                         handleInputChange('housePrice', e.target.value)
                       }
                     />
+                    {formData.housePrice && (
+                      <p className="text-sm text-green-600 font-medium">
+                        🏠 {formatCurrency(formData.housePrice)}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -564,6 +624,11 @@ const LoanSimulation = () => {
                         handleInputChange('deposit', e.target.value)
                       }
                     />
+                    {formData.deposit && (
+                      <p className="text-sm text-blue-600 font-medium">
+                        💰 {formatCurrency(formData.deposit)}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -577,6 +642,11 @@ const LoanSimulation = () => {
                         handleInputChange('monthlyIncome', e.target.value)
                       }
                     />
+                    {formData.monthlyIncome && (
+                      <p className="text-sm text-purple-600 font-medium">
+                        💵 {formatCurrency(formData.monthlyIncome)}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -590,6 +660,11 @@ const LoanSimulation = () => {
                         handleInputChange('existingLoan', e.target.value)
                       }
                     />
+                    {formData.existingLoan && (
+                      <p className="text-sm text-orange-600 font-medium">
+                        💳 {formatCurrency(formData.existingLoan)}
+                      </p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -918,7 +993,7 @@ const LoanSimulation = () => {
                             최대 대출액
                           </span>
                           <div className="font-semibold text-lg">
-                            {(loan.maxAmount / 10000).toLocaleString()}만원
+                            {formatCurrency(loan.maxAmount / 10000)}
                           </div>
                         </div>
                         {loan.eligible && loan.monthlyPayment > 0 && (
@@ -927,10 +1002,9 @@ const LoanSimulation = () => {
                               월 상환액
                             </span>
                             <div className="font-bold text-lg text-blue-600">
-                              {Math.round(
-                                loan.monthlyPayment / 10000
-                              ).toLocaleString()}
-                              만원
+                              {formatCurrency(
+                                Math.round(loan.monthlyPayment / 10000)
+                              )}
                             </div>
                           </div>
                         )}
@@ -998,10 +1072,7 @@ const LoanSimulation = () => {
                               </span>
                             </div>
                             <div className="text-xl font-bold text-blue-900">
-                              {(
-                                selectedLoan.maxAmount / 10000
-                              ).toLocaleString()}
-                              만원
+                              {formatCurrency(selectedLoan.maxAmount / 10000)}
                             </div>
                           </div>
                           <div className="p-4 bg-purple-50 rounded-lg">
@@ -1023,10 +1094,9 @@ const LoanSimulation = () => {
                               </span>
                             </div>
                             <div className="text-xl font-bold text-green-900">
-                              {Math.round(
-                                selectedLoan.monthlyPayment / 10000
-                              ).toLocaleString()}
-                              만원
+                              {formatCurrency(
+                                Math.round(selectedLoan.monthlyPayment / 10000)
+                              )}
                             </div>
                           </div>
                           <div className="p-4 bg-orange-50 rounded-lg">
@@ -1037,10 +1107,9 @@ const LoanSimulation = () => {
                               </span>
                             </div>
                             <div className="text-xl font-bold text-orange-900">
-                              {Math.round(
-                                selectedLoan.totalInterest / 10000
-                              ).toLocaleString()}
-                              만원
+                              {formatCurrency(
+                                Math.round(selectedLoan.totalInterest / 10000)
+                              )}
                             </div>
                           </div>
                         </div>
