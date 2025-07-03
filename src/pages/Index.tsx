@@ -8,14 +8,14 @@ const Index = () => {
   const features = [
     {
       icon: TrendingUp,
-      title: "자산 성장 시뮬레이션",
+      title: "스마트 자산 성장 시뮬레이션",
       description: "수입과 지출을 입력하여 미래 자산 성장을 예측하고 주택 구매 가능 시점을 확인하세요.",
       link: "/asset-simulation",
       color: "text-green-600"
     },
     {
       icon: Calculator,
-      title: "청약 가점 계산기",
+      title: "청약 계산기",
       description: "무주택 기간, 부양가족 수 등을 입력하여 청약 가점을 자동으로 계산하고 당첨 가능 단지를 추천받으세요.",
       link: "/subscription-calculator",
       color: "text-blue-600"
@@ -29,7 +29,7 @@ const Index = () => {
     },
     {
       icon: MapPin,
-      title: "지역 추천",
+      title: "스마트 지역 추천",
       description: "학군, 교통, 인프라를 고려한 맞춤형 지역 추천과 해당 지역의 주택 시세를 확인하세요.",
       link: "/region-recommendation",
       color: "text-orange-600"
