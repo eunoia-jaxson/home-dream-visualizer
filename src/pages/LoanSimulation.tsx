@@ -21,6 +21,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
   ArrowLeft,
   PiggyBank,
   TrendingDown,
@@ -34,6 +39,7 @@ import {
   Shield,
   Info,
   HelpCircle,
+  ChevronDown,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -137,6 +143,13 @@ const LoanSimulation = () => {
     null
   );
 
+  // 섹션별 접기/펼치기 상태
+  const [expandedSections, setExpandedSections] = useState({
+    basic: true,
+    personal: false,
+    financial: false,
+  });
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -184,6 +197,84 @@ const LoanSimulation = () => {
     if (!/^\d+$/.test(pastedText) || parseInt(pastedText) < 0) {
       e.preventDefault();
     }
+  };
+
+  // 입력 진행률 계산
+  const calculateProgress = () => {
+    const requiredFields = [
+      'housePrice',
+      'monthlyIncome',
+      'marriageStatus',
+      'age',
+      'region',
+      'houseType',
+      'jobType',
+      'workExperience',
+      'firstHome',
+      'children',
+      'deposit',
+    ];
+
+    let filledFields = 0;
+
+    requiredFields.forEach((field) => {
+      if (
+        formData[field as keyof typeof formData] &&
+        formData[field as keyof typeof formData] !== ''
+      ) {
+        filledFields++;
+      }
+    });
+
+    return Math.round((filledFields / requiredFields.length) * 100);
+  };
+
+  // 진행률에 따른 격려 메시지
+  const getEncouragementMessage = () => {
+    const progress = calculateProgress();
+
+    if (progress === 0) {
+      return {
+        message: '내 집 마련의 첫걸음! 기본 정보를 입력해보세요 🏡',
+        color: 'text-blue-600',
+        icon: '🎯',
+      };
+    } else if (progress < 40) {
+      return {
+        message: '좋은 시작이에요! 계속 입력해서 최적의 대출을 찾아보세요 ✨',
+        color: 'text-green-600',
+        icon: '📝',
+      };
+    } else if (progress < 70) {
+      return {
+        message:
+          '절반 넘었어요! 조금만 더 입력하면 맞춤 대출 상품을 확인할 수 있어요 💪',
+        color: 'text-blue-600',
+        icon: '💰',
+      };
+    } else if (progress < 100) {
+      return {
+        message:
+          '거의 완성! 마지막 정보만 입력하면 최저금리 대출을 찾아드려요 🔥',
+        color: 'text-purple-600',
+        icon: '🚀',
+      };
+    } else {
+      return {
+        message:
+          '완벽해요! 이제 6개 대출 상품을 비교하고 최적의 선택을 하세요! 🎉',
+        color: 'text-green-600',
+        icon: '✅',
+      };
+    }
+  };
+
+  // 섹션 토글 함수
+  const toggleSection = (section: 'basic' | 'personal' | 'financial') => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
   };
 
   // 만원 단위를 읽기 쉬운 형태로 변환하는 함수
@@ -622,7 +713,7 @@ const LoanSimulation = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Input Form */}
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-4">
                 <CardTitle className="flex items-center space-x-2">
                   <PiggyBank className="h-5 w-5 text-purple-600" />
                   <span>대출 조건 입력</span>
@@ -630,15 +721,76 @@ const LoanSimulation = () => {
                 <CardDescription>
                   대출 시뮬레이션을 위한 정보를 입력해주세요
                 </CardDescription>
+
+                {/* 진행률 바 */}
+                <div className="mt-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-gray-600">
+                      입력 진행률
+                    </span>
+                    <span className="text-sm font-bold text-purple-600">
+                      {calculateProgress()}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500 ease-in-out"
+                      style={{ width: `${calculateProgress()}%` }}
+                    ></div>
+                  </div>
+
+                  {/* 격려 메시지 */}
+                  <div
+                    className={`text-center p-3 rounded-lg bg-gradient-to-r ${
+                      calculateProgress() === 100
+                        ? 'from-green-50 to-blue-50 border border-green-200'
+                        : 'from-purple-50 to-pink-50 border border-purple-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <span className="text-2xl">
+                        {getEncouragementMessage().icon}
+                      </span>
+                      <p
+                        className={`font-medium ${
+                          getEncouragementMessage().color
+                        }`}
+                      >
+                        {getEncouragementMessage().message}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                <Tabs defaultValue="basic" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="basic">기본 정보</TabsTrigger>
-                    <TabsTrigger value="detailed">상세 조건</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="basic" className="space-y-4">
+                {/* 기본 정보 섹션 */}
+                <Collapsible
+                  open={expandedSections.basic}
+                  onOpenChange={() => toggleSection('basic')}
+                >
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <h4 className="font-semibold text-gray-900 flex items-center space-x-2">
+                      <span>🏠 기본 정보</span>
+                      {formData.housePrice &&
+                        formData.deposit &&
+                        formData.monthlyIncome &&
+                        formData.age &&
+                        formData.marriageStatus && (
+                          <Badge
+                            variant="secondary"
+                            className="text-xs bg-green-100 text-green-700"
+                          >
+                            ✅ 완료
+                          </Badge>
+                        )}
+                    </h4>
+                    <ChevronDown
+                      className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
+                        expandedSections.basic ? 'transform rotate-180' : ''
+                      }`}
+                    />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 pt-4">
                     <div className="space-y-2">
                       <Label htmlFor="housePrice">주택 가격 (만원)</Label>
                       <Input
@@ -758,9 +910,38 @@ const LoanSimulation = () => {
                         </Select>
                       </div>
                     </div>
-                  </TabsContent>
+                  </CollapsibleContent>
+                </Collapsible>
 
-                  <TabsContent value="detailed" className="space-y-4">
+                {/* 개인 정보 섹션 */}
+                <Collapsible
+                  open={expandedSections.personal}
+                  onOpenChange={() => toggleSection('personal')}
+                >
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <h4 className="font-semibold text-gray-900 flex items-center space-x-2">
+                      <span>👤 개인 정보</span>
+                      {formData.jobType &&
+                        formData.workExperience &&
+                        formData.children &&
+                        formData.houseType &&
+                        formData.firstHome &&
+                        formData.region && (
+                          <Badge
+                            variant="secondary"
+                            className="text-xs bg-green-100 text-green-700"
+                          >
+                            ✅ 완료
+                          </Badge>
+                        )}
+                    </h4>
+                    <ChevronDown
+                      className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
+                        expandedSections.personal ? 'transform rotate-180' : ''
+                      }`}
+                    />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 pt-4">
                     <div className="space-y-2">
                       <Label>대출 목적</Label>
                       <Select
@@ -896,82 +1077,97 @@ const LoanSimulation = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                  </TabsContent>
-                </Tabs>
+                  </CollapsibleContent>
+                </Collapsible>
 
-                <Separator className="my-6" />
+                {/* 시뮬레이션 설정 섹션 */}
+                <Collapsible
+                  open={expandedSections.financial}
+                  onOpenChange={() => toggleSection('financial')}
+                >
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <h4 className="font-semibold text-gray-900 flex items-center space-x-2">
+                      <span>⚙️ 시뮬레이션 설정</span>
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-blue-100 text-blue-700"
+                      >
+                        선택사항
+                      </Badge>
+                    </h4>
+                    <ChevronDown
+                      className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
+                        expandedSections.financial ? 'transform rotate-180' : ''
+                      }`}
+                    />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 pt-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>대출 기간</Label>
+                        <Select
+                          value={simulationSettings.term}
+                          onValueChange={(value) =>
+                            handleSimulationChange('term', value)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="10">10년</SelectItem>
+                            <SelectItem value="15">15년</SelectItem>
+                            <SelectItem value="20">20년</SelectItem>
+                            <SelectItem value="25">25년</SelectItem>
+                            <SelectItem value="30">30년</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900 flex items-center">
-                    <Calculator className="h-4 w-4 mr-2" />
-                    시뮬레이션 설정
-                  </h4>
+                      <div className="space-y-2">
+                        <Label>금리 유형</Label>
+                        <Select
+                          value={simulationSettings.rateType}
+                          onValueChange={(value) =>
+                            handleSimulationChange('rateType', value)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="fixed">고정금리</SelectItem>
+                            <SelectItem value="variable">변동금리</SelectItem>
+                            <SelectItem value="mixed">혼합금리</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
-                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>대출 기간</Label>
+                      <Label>상환 방식</Label>
                       <Select
-                        value={simulationSettings.term}
+                        value={simulationSettings.repaymentType}
                         onValueChange={(value) =>
-                          handleSimulationChange('term', value)
+                          handleSimulationChange('repaymentType', value)
                         }
                       >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="10">10년</SelectItem>
-                          <SelectItem value="15">15년</SelectItem>
-                          <SelectItem value="20">20년</SelectItem>
-                          <SelectItem value="25">25년</SelectItem>
-                          <SelectItem value="30">30년</SelectItem>
+                          <SelectItem value="equal_payment">
+                            원리금균등상환
+                          </SelectItem>
+                          <SelectItem value="equal_principal">
+                            원금균등상환
+                          </SelectItem>
+                          <SelectItem value="bullet">만기일시상환</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-
-                    <div className="space-y-2">
-                      <Label>금리 유형</Label>
-                      <Select
-                        value={simulationSettings.rateType}
-                        onValueChange={(value) =>
-                          handleSimulationChange('rateType', value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="fixed">고정금리</SelectItem>
-                          <SelectItem value="variable">변동금리</SelectItem>
-                          <SelectItem value="mixed">혼합금리</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>상환 방식</Label>
-                    <Select
-                      value={simulationSettings.repaymentType}
-                      onValueChange={(value) =>
-                        handleSimulationChange('repaymentType', value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="equal_payment">
-                          원리금균등상환
-                        </SelectItem>
-                        <SelectItem value="equal_principal">
-                          원금균등상환
-                        </SelectItem>
-                        <SelectItem value="bullet">만기일시상환</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                  </CollapsibleContent>
+                </Collapsible>
 
                 <Button
                   onClick={calculateLoan}

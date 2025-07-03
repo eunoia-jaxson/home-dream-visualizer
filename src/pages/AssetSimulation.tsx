@@ -21,6 +21,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
   ArrowLeft,
   TrendingUp,
   Home,
@@ -30,6 +35,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Target,
+  ChevronDown,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -95,6 +101,12 @@ const AssetSimulation = () => {
   const [simulationData, setSimulationData] = useState<SimulationData[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [selectedScenario, setSelectedScenario] = useState<string>('average');
+
+  // 섹션별 접기/펼치기 상태
+  const [expandedSections, setExpandedSections] = useState({
+    basic: true,
+    future: false,
+  });
 
   // 시나리오 설정
   const scenarios: Record<string, ScenarioConfig> = {
@@ -164,6 +176,95 @@ const AssetSimulation = () => {
     if (!/^\d+$/.test(pastedText) || parseInt(pastedText) < 0) {
       e.preventDefault();
     }
+  };
+
+  // 입력 진행률 계산
+  const calculateProgress = () => {
+    const requiredFields = [
+      'monthlyIncome',
+      'monthlyExpense',
+      'currentAssets',
+      'targetHousePrice',
+      'incomeGrowthRate',
+      'expenseGrowthRate',
+      'investmentReturn',
+    ];
+
+    let filledFields = 0;
+
+    requiredFields.forEach((field) => {
+      if (
+        field === 'incomeGrowthRate' ||
+        field === 'expenseGrowthRate' ||
+        field === 'investmentReturn'
+      ) {
+        // Select 필드는 기본값이 있으므로 항상 채워진 것으로 간주
+        if (formData[field as keyof typeof formData]) {
+          filledFields++;
+        }
+      } else {
+        // Input 필드는 실제 값이 있는지 확인
+        if (
+          formData[field as keyof typeof formData] &&
+          formData[field as keyof typeof formData] !== ''
+        ) {
+          filledFields++;
+        }
+      }
+    });
+
+    return Math.round((filledFields / requiredFields.length) * 100);
+  };
+
+  // 진행률에 따른 격려 메시지
+  const getEncouragementMessage = () => {
+    const progress = calculateProgress();
+
+    if (progress === 0) {
+      return {
+        message: '시작이 반이에요! 첫 번째 정보를 입력해보세요 🚀',
+        color: 'text-blue-600',
+        icon: '💪',
+      };
+    } else if (progress < 30) {
+      return {
+        message: '좋은 시작이에요! 계속 진행해보세요 ✨',
+        color: 'text-green-600',
+        icon: '🌟',
+      };
+    } else if (progress < 60) {
+      return {
+        message: '절반 가까이 왔어요! 조금만 더 힘내세요 💪',
+        color: 'text-blue-600',
+        icon: '🎯',
+      };
+    } else if (progress < 90) {
+      return {
+        message: '거의 다 왔어요! 마지막 정보만 입력하면 완료! 🔥',
+        color: 'text-purple-600',
+        icon: '🚀',
+      };
+    } else if (progress < 100) {
+      return {
+        message: '완벽해요! 이제 시뮬레이션을 실행할 수 있어요! ⚡',
+        color: 'text-green-600',
+        icon: '✨',
+      };
+    } else {
+      return {
+        message: '모든 준비 완료! 미래 자산을 확인해보세요! 🎉',
+        color: 'text-green-600',
+        icon: '🎊',
+      };
+    }
+  };
+
+  // 섹션 토글 함수
+  const toggleSection = (section: 'basic' | 'future') => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
   };
 
   // 만원 단위를 읽기 쉬운 형태로 변환하는 함수
@@ -453,7 +554,7 @@ const AssetSimulation = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Input Form */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2">
                 <Calculator className="h-5 w-5 text-green-600" />
                 <span>시뮬레이션 설정</span>
@@ -461,271 +562,361 @@ const AssetSimulation = () => {
               <CardDescription>
                 현재 상황과 미래 변화 전망을 입력해주세요
               </CardDescription>
+
+              {/* 진행률 바 */}
+              <div className="mt-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600">
+                    입력 진행률
+                  </span>
+                  <span className="text-sm font-bold text-blue-600">
+                    {calculateProgress()}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500 ease-in-out"
+                    style={{ width: `${calculateProgress()}%` }}
+                  ></div>
+                </div>
+
+                {/* 격려 메시지 */}
+                <div
+                  className={`text-center p-3 rounded-lg bg-gradient-to-r ${
+                    calculateProgress() === 100
+                      ? 'from-green-50 to-blue-50 border border-green-200'
+                      : 'from-blue-50 to-purple-50 border border-blue-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <span className="text-2xl">
+                      {getEncouragementMessage().icon}
+                    </span>
+                    <p
+                      className={`font-medium ${
+                        getEncouragementMessage().color
+                      }`}
+                    >
+                      {getEncouragementMessage().message}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* 기본 정보 */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900">기본 정보</h4>
-                <div className="grid grid-cols-2 gap-4">
+              <Collapsible
+                open={expandedSections.basic}
+                onOpenChange={() => toggleSection('basic')}
+              >
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <h4 className="font-semibold text-gray-900 flex items-center space-x-2">
+                    <span>📊 기본 정보</span>
+                    {formData.monthlyIncome &&
+                      formData.monthlyExpense &&
+                      formData.currentAssets &&
+                      formData.targetHousePrice && (
+                        <Badge
+                          variant="secondary"
+                          className="text-xs bg-green-100 text-green-700"
+                        >
+                          ✅ 완료
+                        </Badge>
+                      )}
+                  </h4>
+                  <ChevronDown
+                    className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
+                      expandedSections.basic ? 'transform rotate-180' : ''
+                    }`}
+                  />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 pt-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="monthlyIncome">월 수입 (만원)</Label>
+                      <Input
+                        id="monthlyIncome"
+                        type="number"
+                        placeholder="예: 350"
+                        value={formData.monthlyIncome}
+                        onChange={(e) =>
+                          handleInputChange('monthlyIncome', e.target.value)
+                        }
+                        onKeyDown={handleNumberKeyDown}
+                        onPaste={handleNumberPaste}
+                        min="0"
+                      />
+                      {formData.monthlyIncome && (
+                        <p className="text-sm text-blue-600 font-medium">
+                          💰 {formatCurrency(formData.monthlyIncome)}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="monthlyExpense">월 지출 (만원)</Label>
+                      <Input
+                        id="monthlyExpense"
+                        type="number"
+                        placeholder="예: 200"
+                        value={formData.monthlyExpense}
+                        onChange={(e) =>
+                          handleInputChange('monthlyExpense', e.target.value)
+                        }
+                        onKeyDown={handleNumberKeyDown}
+                        onPaste={handleNumberPaste}
+                        min="0"
+                      />
+                      {formData.monthlyExpense && (
+                        <p className="text-sm text-red-600 font-medium">
+                          💸 {formatCurrency(formData.monthlyExpense)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="monthlyIncome">월 수입 (만원)</Label>
+                    <Label htmlFor="currentAssets">현재 자산 (만원)</Label>
                     <Input
-                      id="monthlyIncome"
+                      id="currentAssets"
                       type="number"
-                      placeholder="예: 350"
-                      value={formData.monthlyIncome}
+                      placeholder="예: 3000"
+                      value={formData.currentAssets}
                       onChange={(e) =>
-                        handleInputChange('monthlyIncome', e.target.value)
+                        handleInputChange('currentAssets', e.target.value)
                       }
                       onKeyDown={handleNumberKeyDown}
                       onPaste={handleNumberPaste}
                       min="0"
                     />
-                    {formData.monthlyIncome && (
+                    {formData.currentAssets && (
                       <p className="text-sm text-blue-600 font-medium">
-                        💰 {formatCurrency(formData.monthlyIncome)}
+                        💰 {formatCurrency(formData.currentAssets)}
                       </p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="monthlyExpense">월 지출 (만원)</Label>
+                    <Label htmlFor="targetHousePrice">
+                      목표 주택 가격 (만원)
+                    </Label>
                     <Input
-                      id="monthlyExpense"
+                      id="targetHousePrice"
                       type="number"
-                      placeholder="예: 200"
-                      value={formData.monthlyExpense}
+                      placeholder="예: 50000"
+                      value={formData.targetHousePrice}
                       onChange={(e) =>
-                        handleInputChange('monthlyExpense', e.target.value)
+                        handleInputChange('targetHousePrice', e.target.value)
                       }
                       onKeyDown={handleNumberKeyDown}
                       onPaste={handleNumberPaste}
                       min="0"
                     />
-                    {formData.monthlyExpense && (
-                      <p className="text-sm text-red-600 font-medium">
-                        💸 {formatCurrency(formData.monthlyExpense)}
+                    {formData.targetHousePrice && (
+                      <p className="text-sm text-green-600 font-medium">
+                        🏠 {formatCurrency(formData.targetHousePrice)}
                       </p>
                     )}
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="currentAssets">현재 자산 (만원)</Label>
-                  <Input
-                    id="currentAssets"
-                    type="number"
-                    placeholder="예: 3000"
-                    value={formData.currentAssets}
-                    onChange={(e) =>
-                      handleInputChange('currentAssets', e.target.value)
-                    }
-                    onKeyDown={handleNumberKeyDown}
-                    onPaste={handleNumberPaste}
-                    min="0"
-                  />
-                  {formData.currentAssets && (
-                    <p className="text-sm text-blue-600 font-medium">
-                      💰 {formatCurrency(formData.currentAssets)}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="targetHousePrice">
-                    목표 주택 가격 (만원)
-                  </Label>
-                  <Input
-                    id="targetHousePrice"
-                    type="number"
-                    placeholder="예: 50000"
-                    value={formData.targetHousePrice}
-                    onChange={(e) =>
-                      handleInputChange('targetHousePrice', e.target.value)
-                    }
-                    onKeyDown={handleNumberKeyDown}
-                    onPaste={handleNumberPaste}
-                    min="0"
-                  />
-                  {formData.targetHousePrice && (
-                    <p className="text-sm text-green-600 font-medium">
-                      🏠 {formatCurrency(formData.targetHousePrice)}
-                    </p>
-                  )}
-                </div>
-              </div>
+                </CollapsibleContent>
+              </Collapsible>
 
               <Separator />
 
               {/* 미래 전망 설정 */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-gray-900">
-                    미래 전망 설정
+              <Collapsible
+                open={expandedSections.future}
+                onOpenChange={() => toggleSection('future')}
+              >
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <h4 className="font-semibold text-gray-900 flex items-center space-x-2">
+                    <span>🔮 미래 전망 설정</span>
+                    {formData.incomeGrowthRate &&
+                      formData.expenseGrowthRate &&
+                      formData.investmentReturn && (
+                        <Badge
+                          variant="secondary"
+                          className="text-xs bg-green-100 text-green-700"
+                        >
+                          ✅ 완료
+                        </Badge>
+                      )}
                   </h4>
+                  <ChevronDown
+                    className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
+                      expandedSections.future ? 'transform rotate-180' : ''
+                    }`}
+                  />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 pt-4">
+                  <div className="flex items-center justify-between">
+                    {(formData.incomeGrowthRate === 'custom' ||
+                      formData.expenseGrowthRate === 'custom' ||
+                      formData.investmentReturn === 'custom') && (
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-blue-100 text-blue-700"
+                      >
+                        🎯 사용자 정의 설정
+                      </Badge>
+                    )}
+                  </div>
                   {(formData.incomeGrowthRate === 'custom' ||
                     formData.expenseGrowthRate === 'custom' ||
                     formData.investmentReturn === 'custom') && (
-                    <Badge
-                      variant="secondary"
-                      className="text-xs bg-blue-100 text-blue-700"
-                    >
-                      🎯 사용자 정의 설정
-                    </Badge>
+                    <Alert className="bg-blue-50 border-blue-200">
+                      <AlertTriangle className="h-4 w-4 text-blue-600" />
+                      <AlertDescription className="text-blue-800">
+                        <div className="font-medium">💡 고급 설정 활성화</div>
+                        <div className="text-sm mt-1">
+                          사용자 정의 값을 설정하셨습니다. 시나리오 분석 시 이
+                          값들을 기준으로 상대적 변화를 적용합니다.
+                        </div>
+                      </AlertDescription>
+                    </Alert>
                   )}
-                </div>
-                {(formData.incomeGrowthRate === 'custom' ||
-                  formData.expenseGrowthRate === 'custom' ||
-                  formData.investmentReturn === 'custom') && (
-                  <Alert className="bg-blue-50 border-blue-200">
-                    <AlertTriangle className="h-4 w-4 text-blue-600" />
-                    <AlertDescription className="text-blue-800">
-                      <div className="font-medium">💡 고급 설정 활성화</div>
-                      <div className="text-sm mt-1">
-                        사용자 정의 값을 설정하셨습니다. 시나리오 분석 시 이
-                        값들을 기준으로 상대적 변화를 적용합니다.
-                      </div>
-                    </AlertDescription>
-                  </Alert>
-                )}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="incomeGrowthRate">
-                      연간 수입 증가율 (%)
-                    </Label>
-                    <Select
-                      value={formData.incomeGrowthRate}
-                      onValueChange={(value) =>
-                        handleInputChange('incomeGrowthRate', value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">0% (변화없음)</SelectItem>
-                        <SelectItem value="1">1% (보수적)</SelectItem>
-                        <SelectItem value="2">2% (안정적)</SelectItem>
-                        <SelectItem value="3">3% (평균적)</SelectItem>
-                        <SelectItem value="4">4% (적극적)</SelectItem>
-                        <SelectItem value="5">5% (낙관적)</SelectItem>
-                        <SelectItem value="custom">🎯 직접 입력</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {formData.incomeGrowthRate === 'custom' && (
-                      <Input
-                        type="number"
-                        placeholder="예: 8 (고소득자/승진 예상)"
-                        value={formData.customIncomeGrowthRate}
-                        onChange={(e) =>
-                          handleInputChange(
-                            'customIncomeGrowthRate',
-                            e.target.value
-                          )
-                        }
-                        onKeyDown={handleNumberKeyDown}
-                        onPaste={handleNumberPaste}
-                        className="mt-2"
-                        min="0"
-                        max="50"
-                        step="0.1"
-                      />
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="expenseGrowthRate">
-                      연간 지출 증가율 (%)
-                    </Label>
-                    <Select
-                      value={formData.expenseGrowthRate}
-                      onValueChange={(value) =>
-                        handleInputChange('expenseGrowthRate', value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1% (절약형)</SelectItem>
-                        <SelectItem value="1.5">1.5% (관리형)</SelectItem>
-                        <SelectItem value="2">2% (평균형)</SelectItem>
-                        <SelectItem value="2.5">2.5% (일반형)</SelectItem>
-                        <SelectItem value="3">3% (소비형)</SelectItem>
-                        <SelectItem value="4">4% (인플레이션)</SelectItem>
-                        <SelectItem value="custom">🎯 직접 입력</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {formData.expenseGrowthRate === 'custom' && (
-                      <Input
-                        type="number"
-                        placeholder="예: 0.5 (초절약형)"
-                        value={formData.customExpenseGrowthRate}
-                        onChange={(e) =>
-                          handleInputChange(
-                            'customExpenseGrowthRate',
-                            e.target.value
-                          )
-                        }
-                        onKeyDown={handleNumberKeyDown}
-                        onPaste={handleNumberPaste}
-                        className="mt-2"
-                        min="0"
-                        max="20"
-                        step="0.1"
-                      />
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="investmentReturn">예상 투자 수익률 (%)</Label>
-                  <Select
-                    value={formData.investmentReturn}
-                    onValueChange={(value) =>
-                      handleInputChange('investmentReturn', value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2">2% (예금/적금)</SelectItem>
-                      <SelectItem value="3">3% (국고채)</SelectItem>
-                      <SelectItem value="4">4% (회사채)</SelectItem>
-                      <SelectItem value="5">5% (혼합형 펀드)</SelectItem>
-                      <SelectItem value="6">6% (주식형 펀드)</SelectItem>
-                      <SelectItem value="7">7% (직접 투자)</SelectItem>
-                      <SelectItem value="8">8% (적극적 투자)</SelectItem>
-                      <SelectItem value="custom">🎯 직접 입력</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {formData.investmentReturn === 'custom' && (
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Input
-                        type="number"
-                        placeholder="예: 12 (부동산/주식 고수익)"
-                        value={formData.customInvestmentReturn}
-                        onChange={(e) =>
-                          handleInputChange(
-                            'customInvestmentReturn',
-                            e.target.value
-                          )
+                      <Label htmlFor="incomeGrowthRate">
+                        연간 수입 증가율 (%)
+                      </Label>
+                      <Select
+                        value={formData.incomeGrowthRate}
+                        onValueChange={(value) =>
+                          handleInputChange('incomeGrowthRate', value)
                         }
-                        onKeyDown={handleNumberKeyDown}
-                        onPaste={handleNumberPaste}
-                        className="mt-2"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                      />
-                      <p className="text-xs text-gray-500">
-                        💡 참고: 암호화폐(15-30%), 성장주(10-15%), 부동산(8-12%)
-                      </p>
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">0% (변화없음)</SelectItem>
+                          <SelectItem value="1">1% (보수적)</SelectItem>
+                          <SelectItem value="2">2% (안정적)</SelectItem>
+                          <SelectItem value="3">3% (평균적)</SelectItem>
+                          <SelectItem value="4">4% (적극적)</SelectItem>
+                          <SelectItem value="5">5% (낙관적)</SelectItem>
+                          <SelectItem value="custom">🎯 직접 입력</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {formData.incomeGrowthRate === 'custom' && (
+                        <Input
+                          type="number"
+                          placeholder="예: 8 (고소득자/승진 예상)"
+                          value={formData.customIncomeGrowthRate}
+                          onChange={(e) =>
+                            handleInputChange(
+                              'customIncomeGrowthRate',
+                              e.target.value
+                            )
+                          }
+                          onKeyDown={handleNumberKeyDown}
+                          onPaste={handleNumberPaste}
+                          className="mt-2"
+                          min="0"
+                          max="50"
+                          step="0.1"
+                        />
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="expenseGrowthRate">
+                        연간 지출 증가율 (%)
+                      </Label>
+                      <Select
+                        value={formData.expenseGrowthRate}
+                        onValueChange={(value) =>
+                          handleInputChange('expenseGrowthRate', value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1% (절약형)</SelectItem>
+                          <SelectItem value="1.5">1.5% (관리형)</SelectItem>
+                          <SelectItem value="2">2% (평균형)</SelectItem>
+                          <SelectItem value="2.5">2.5% (일반형)</SelectItem>
+                          <SelectItem value="3">3% (소비형)</SelectItem>
+                          <SelectItem value="4">4% (인플레이션)</SelectItem>
+                          <SelectItem value="custom">🎯 직접 입력</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {formData.expenseGrowthRate === 'custom' && (
+                        <Input
+                          type="number"
+                          placeholder="예: 0.5 (초절약형)"
+                          value={formData.customExpenseGrowthRate}
+                          onChange={(e) =>
+                            handleInputChange(
+                              'customExpenseGrowthRate',
+                              e.target.value
+                            )
+                          }
+                          onKeyDown={handleNumberKeyDown}
+                          onPaste={handleNumberPaste}
+                          className="mt-2"
+                          min="0"
+                          max="20"
+                          step="0.1"
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="investmentReturn">
+                      예상 투자 수익률 (%)
+                    </Label>
+                    <Select
+                      value={formData.investmentReturn}
+                      onValueChange={(value) =>
+                        handleInputChange('investmentReturn', value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2">2% (예금/적금)</SelectItem>
+                        <SelectItem value="3">3% (국고채)</SelectItem>
+                        <SelectItem value="4">4% (회사채)</SelectItem>
+                        <SelectItem value="5">5% (혼합형 펀드)</SelectItem>
+                        <SelectItem value="6">6% (주식형 펀드)</SelectItem>
+                        <SelectItem value="7">7% (직접 투자)</SelectItem>
+                        <SelectItem value="8">8% (적극적 투자)</SelectItem>
+                        <SelectItem value="custom">🎯 직접 입력</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {formData.investmentReturn === 'custom' && (
+                      <div className="space-y-2">
+                        <Input
+                          type="number"
+                          placeholder="예: 12 (부동산/주식 고수익)"
+                          value={formData.customInvestmentReturn}
+                          onChange={(e) =>
+                            handleInputChange(
+                              'customInvestmentReturn',
+                              e.target.value
+                            )
+                          }
+                          onKeyDown={handleNumberKeyDown}
+                          onPaste={handleNumberPaste}
+                          className="mt-2"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                        />
+                        <p className="text-xs text-gray-500">
+                          💡 참고: 암호화폐(15-30%), 성장주(10-15%),
+                          부동산(8-12%)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
 
               <Separator />
 
