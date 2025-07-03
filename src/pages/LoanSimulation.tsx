@@ -25,6 +25,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { useFormData } from '@/hooks/useFormData';
+import { useNumberInput } from '@/hooks/useNumberInput';
+import { useProgress } from '@/hooks/useProgress';
+import { useCollapsibleSections } from '@/hooks/useCollapsibleSections';
+import { useCurrency } from '@/hooks/useCurrency';
 import {
   ArrowLeft,
   PiggyBank,
@@ -108,7 +113,7 @@ interface SimulationData {
 }
 
 const LoanSimulation = () => {
-  const [formData, setFormData] = useState({
+  const { formData, handleInputChange } = useFormData({
     housePrice: '',
     monthlyIncome: '',
     existingLoan: '',
@@ -144,18 +149,11 @@ const LoanSimulation = () => {
   );
 
   // 섹션별 접기/펼치기 상태
-  const [expandedSections, setExpandedSections] = useState({
+  const { expandedSections, toggleSection } = useCollapsibleSections({
     basic: true,
     personal: false,
     financial: false,
   });
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
 
   const handleSimulationChange = (field: string, value: string) => {
     setSimulationSettings((prev) => ({
@@ -164,173 +162,61 @@ const LoanSimulation = () => {
     }));
   };
 
-  // 0 이상의 숫자만 입력 가능하도록 하는 함수
-  const handleNumberKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // 허용된 키: 숫자(0-9), 백스페이스, 삭제, 탭, 화살표 키, Home, End
-    const allowedKeys = [
-      'Backspace',
-      'Delete',
-      'Tab',
-      'ArrowLeft',
-      'ArrowRight',
-      'ArrowUp',
-      'ArrowDown',
-      'Home',
-      'End',
-    ];
+  // 숫자 입력 검증 훅 사용
+  const { handleNumberKeyDown, handleNumberPaste } = useNumberInput();
 
-    // 숫자 키 (0-9)와 허용된 키가 아니면 입력 차단
-    if (!allowedKeys.includes(e.key) && (e.key < '0' || e.key > '9')) {
-      e.preventDefault();
-    }
+  // 진행률 계산 및 격려 메시지 훅 사용
+  const requiredFields = [
+    'housePrice',
+    'monthlyIncome',
+    'marriageStatus',
+    'age',
+    'region',
+    'houseType',
+    'jobType',
+    'workExperience',
+    'firstHome',
+    'children',
+    'deposit',
+  ];
 
-    // 마이너스(-), 플러스(+), 점(.), 'e', 'E' 등 특수문자 차단
-    if (['-', '+', '.', 'e', 'E'].includes(e.key)) {
-      e.preventDefault();
-    }
-  };
-
-  // 붙여넣기 시 0 이상의 숫자만 허용
-  const handleNumberPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const pastedText = e.clipboardData.getData('text');
-    // 숫자가 아니거나 음수면 붙여넣기 차단
-    if (!/^\d+$/.test(pastedText) || parseInt(pastedText) < 0) {
-      e.preventDefault();
-    }
-  };
-
-  // 입력 진행률 계산
-  const calculateProgress = () => {
-    const requiredFields = [
-      'housePrice',
-      'monthlyIncome',
-      'marriageStatus',
-      'age',
-      'region',
-      'houseType',
-      'jobType',
-      'workExperience',
-      'firstHome',
-      'children',
-      'deposit',
-    ];
-
-    let filledFields = 0;
-
-    requiredFields.forEach((field) => {
-      if (
-        formData[field as keyof typeof formData] &&
-        formData[field as keyof typeof formData] !== ''
-      ) {
-        filledFields++;
-      }
-    });
-
-    return Math.round((filledFields / requiredFields.length) * 100);
-  };
-
-  // 진행률에 따른 격려 메시지
-  const getEncouragementMessage = () => {
-    const progress = calculateProgress();
-
-    if (progress === 0) {
-      return {
+  const { progress, encouragementMessage } = useProgress({
+    formData,
+    requiredFields,
+    encouragementMessages: {
+      start: {
         message: '내 집 마련의 첫걸음! 기본 정보를 입력해보세요 🏡',
         color: 'text-blue-600',
         icon: '🎯',
-      };
-    } else if (progress < 40) {
-      return {
+      },
+      progress30: {
         message: '좋은 시작이에요! 계속 입력해서 최적의 대출을 찾아보세요 ✨',
         color: 'text-green-600',
         icon: '📝',
-      };
-    } else if (progress < 70) {
-      return {
+      },
+      progress70: {
         message:
           '절반 넘었어요! 조금만 더 입력하면 맞춤 대출 상품을 확인할 수 있어요 💪',
         color: 'text-blue-600',
         icon: '💰',
-      };
-    } else if (progress < 100) {
-      return {
+      },
+      nearComplete: {
         message:
           '거의 완성! 마지막 정보만 입력하면 최저금리 대출을 찾아드려요 🔥',
         color: 'text-purple-600',
         icon: '🚀',
-      };
-    } else {
-      return {
+      },
+      complete: {
         message:
           '완벽해요! 이제 6개 대출 상품을 비교하고 최적의 선택을 하세요! 🎉',
         color: 'text-green-600',
         icon: '✅',
-      };
-    }
-  };
+      },
+    },
+  });
 
-  // 섹션 토글 함수
-  const toggleSection = (section: 'basic' | 'personal' | 'financial') => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
-
-  // 만원 단위를 읽기 쉬운 형태로 변환하는 함수
-  const formatCurrency = (amount: string | number) => {
-    const num = typeof amount === 'string' ? parseInt(amount) : amount;
-    if (!num || num === 0) return '';
-
-    if (num >= 100000000) {
-      // 1조 이상 (100,000,000만원 = 1조)
-      const jo = Math.floor(num / 100000000);
-      const remainder = num % 100000000;
-
-      if (remainder === 0) {
-        return `${jo}조원`;
-      } else if (remainder >= 10000) {
-        const eok = Math.floor(remainder / 10000);
-        const eokRemainder = remainder % 10000;
-        if (eokRemainder === 0) {
-          return `${jo}조 ${eok}억원`;
-        } else {
-          return `${jo}조 ${eok}억 ${eokRemainder}만원`;
-        }
-      } else {
-        return `${jo}조 ${remainder}만원`;
-      }
-    } else if (num >= 10000) {
-      // 1억 이상
-      const eok = Math.floor(num / 10000);
-      const remainder = num % 10000;
-
-      if (remainder === 0) {
-        return `${eok}억원`;
-      } else if (remainder >= 1000) {
-        const thousand = Math.floor(remainder / 1000);
-        const remaining = remainder % 1000;
-        if (remaining === 0) {
-          return `${eok}억 ${thousand}천만원`;
-        } else {
-          return `${eok}억 ${remainder}만원`;
-        }
-      } else {
-        return `${eok}억 ${remainder}만원`;
-      }
-    } else if (num >= 1000) {
-      // 1천만 이상
-      const thousand = Math.floor(num / 1000);
-      const remainder = num % 1000;
-      if (remainder === 0) {
-        return `${thousand}천만원`;
-      } else {
-        return `${thousand}천 ${remainder}만원`;
-      }
-    } else {
-      return `${num}만원`;
-    }
-  };
+  // 통화 포맷팅 훅 사용
+  const { formatCurrency } = useCurrency();
 
   // DSR/DTI 계산 함수
   const calculateDSR = (
@@ -729,34 +615,32 @@ const LoanSimulation = () => {
                       입력 진행률
                     </span>
                     <span className="text-sm font-bold text-purple-600">
-                      {calculateProgress()}%
+                      {progress}%
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500 ease-in-out"
-                      style={{ width: `${calculateProgress()}%` }}
+                      style={{ width: `${progress}%` }}
                     ></div>
                   </div>
 
                   {/* 격려 메시지 */}
                   <div
                     className={`text-center p-3 rounded-lg bg-gradient-to-r ${
-                      calculateProgress() === 100
+                      progress === 100
                         ? 'from-green-50 to-blue-50 border border-green-200'
                         : 'from-purple-50 to-pink-50 border border-purple-200'
                     }`}
                   >
                     <div className="flex items-center justify-center space-x-2">
                       <span className="text-2xl">
-                        {getEncouragementMessage().icon}
+                        {encouragementMessage.icon}
                       </span>
                       <p
-                        className={`font-medium ${
-                          getEncouragementMessage().color
-                        }`}
+                        className={`font-medium ${encouragementMessage.color}`}
                       >
-                        {getEncouragementMessage().message}
+                        {encouragementMessage.message}
                       </p>
                     </div>
                   </div>

@@ -25,6 +25,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { useFormData } from '@/hooks/useFormData';
+import { useNumberInput } from '@/hooks/useNumberInput';
+import { useProgress } from '@/hooks/useProgress';
+import { useCollapsibleSections } from '@/hooks/useCollapsibleSections';
+import { useCurrency } from '@/hooks/useCurrency';
 import {
   ArrowLeft,
   TrendingUp,
@@ -83,7 +88,7 @@ interface ScenarioData {
 }
 
 const AssetSimulation = () => {
-  const [formData, setFormData] = useState({
+  const { formData, handleInputChange } = useFormData({
     monthlyIncome: '',
     monthlyExpense: '',
     currentAssets: '',
@@ -103,7 +108,7 @@ const AssetSimulation = () => {
   const [selectedScenario, setSelectedScenario] = useState<string>('average');
 
   // 섹션별 접기/펼치기 상태
-  const [expandedSections, setExpandedSections] = useState({
+  const { expandedSections, toggleSection } = useCollapsibleSections({
     basic: true,
     future: false,
   });
@@ -136,191 +141,33 @@ const AssetSimulation = () => {
     },
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  // 숫자 입력 검증 훅 사용
+  const { handleNumberKeyDown, handleNumberPaste } = useNumberInput();
 
-  // 0 이상의 숫자만 입력 가능하도록 하는 함수
-  const handleNumberKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // 허용된 키: 숫자(0-9), 백스페이스, 삭제, 탭, 화살표 키, Home, End
-    const allowedKeys = [
-      'Backspace',
-      'Delete',
-      'Tab',
-      'ArrowLeft',
-      'ArrowRight',
-      'ArrowUp',
-      'ArrowDown',
-      'Home',
-      'End',
-    ];
+  // 진행률 계산 및 격려 메시지 훅 사용
+  const requiredFields = [
+    'monthlyIncome',
+    'monthlyExpense',
+    'currentAssets',
+    'targetHousePrice',
+    'incomeGrowthRate',
+    'expenseGrowthRate',
+    'investmentReturn',
+  ];
 
-    // 숫자 키 (0-9)와 허용된 키가 아니면 입력 차단
-    if (!allowedKeys.includes(e.key) && (e.key < '0' || e.key > '9')) {
-      e.preventDefault();
-    }
+  const { progress, encouragementMessage } = useProgress({
+    formData: {
+      ...formData,
+      // Select 필드는 기본값이 있으므로 항상 채워진 것으로 간주
+      incomeGrowthRate: formData.incomeGrowthRate || '3',
+      expenseGrowthRate: formData.expenseGrowthRate || '2',
+      investmentReturn: formData.investmentReturn || '5',
+    },
+    requiredFields,
+  });
 
-    // 마이너스(-), 플러스(+), 점(.), 'e', 'E' 등 특수문자 차단
-    if (['-', '+', '.', 'e', 'E'].includes(e.key)) {
-      e.preventDefault();
-    }
-  };
-
-  // 붙여넣기 시 0 이상의 숫자만 허용
-  const handleNumberPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const pastedText = e.clipboardData.getData('text');
-    // 숫자가 아니거나 음수면 붙여넣기 차단
-    if (!/^\d+$/.test(pastedText) || parseInt(pastedText) < 0) {
-      e.preventDefault();
-    }
-  };
-
-  // 입력 진행률 계산
-  const calculateProgress = () => {
-    const requiredFields = [
-      'monthlyIncome',
-      'monthlyExpense',
-      'currentAssets',
-      'targetHousePrice',
-      'incomeGrowthRate',
-      'expenseGrowthRate',
-      'investmentReturn',
-    ];
-
-    let filledFields = 0;
-
-    requiredFields.forEach((field) => {
-      if (
-        field === 'incomeGrowthRate' ||
-        field === 'expenseGrowthRate' ||
-        field === 'investmentReturn'
-      ) {
-        // Select 필드는 기본값이 있으므로 항상 채워진 것으로 간주
-        if (formData[field as keyof typeof formData]) {
-          filledFields++;
-        }
-      } else {
-        // Input 필드는 실제 값이 있는지 확인
-        if (
-          formData[field as keyof typeof formData] &&
-          formData[field as keyof typeof formData] !== ''
-        ) {
-          filledFields++;
-        }
-      }
-    });
-
-    return Math.round((filledFields / requiredFields.length) * 100);
-  };
-
-  // 진행률에 따른 격려 메시지
-  const getEncouragementMessage = () => {
-    const progress = calculateProgress();
-
-    if (progress === 0) {
-      return {
-        message: '시작이 반이에요! 첫 번째 정보를 입력해보세요 🚀',
-        color: 'text-blue-600',
-        icon: '💪',
-      };
-    } else if (progress < 30) {
-      return {
-        message: '좋은 시작이에요! 계속 진행해보세요 ✨',
-        color: 'text-green-600',
-        icon: '🌟',
-      };
-    } else if (progress < 60) {
-      return {
-        message: '절반 가까이 왔어요! 조금만 더 힘내세요 💪',
-        color: 'text-blue-600',
-        icon: '🎯',
-      };
-    } else if (progress < 90) {
-      return {
-        message: '거의 다 왔어요! 마지막 정보만 입력하면 완료! 🔥',
-        color: 'text-purple-600',
-        icon: '🚀',
-      };
-    } else if (progress < 100) {
-      return {
-        message: '완벽해요! 이제 시뮬레이션을 실행할 수 있어요! ⚡',
-        color: 'text-green-600',
-        icon: '✨',
-      };
-    } else {
-      return {
-        message: '모든 준비 완료! 미래 자산을 확인해보세요! 🎉',
-        color: 'text-green-600',
-        icon: '🎊',
-      };
-    }
-  };
-
-  // 섹션 토글 함수
-  const toggleSection = (section: 'basic' | 'future') => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
-
-  // 만원 단위를 읽기 쉬운 형태로 변환하는 함수
-  const formatCurrency = (amount: string) => {
-    const num = parseInt(amount);
-    if (!num || num === 0) return '';
-
-    if (num >= 100000000) {
-      // 1조 이상 (100,000,000만원 = 1조)
-      const jo = Math.floor(num / 100000000);
-      const remainder = num % 100000000;
-
-      if (remainder === 0) {
-        return `${jo}조원`;
-      } else if (remainder >= 10000) {
-        const eok = Math.floor(remainder / 10000);
-        const eokRemainder = remainder % 10000;
-        if (eokRemainder === 0) {
-          return `${jo}조 ${eok}억원`;
-        } else {
-          return `${jo}조 ${eok}억 ${eokRemainder}만원`;
-        }
-      } else {
-        return `${jo}조 ${remainder}만원`;
-      }
-    } else if (num >= 10000) {
-      // 1억 이상
-      const eok = Math.floor(num / 10000);
-      const remainder = num % 10000;
-
-      if (remainder === 0) {
-        return `${eok}억원`;
-      } else if (remainder >= 1000) {
-        const thousand = Math.floor(remainder / 1000);
-        const remaining = remainder % 1000;
-        if (remaining === 0) {
-          return `${eok}억 ${thousand}천만원`;
-        } else {
-          return `${eok}억 ${remainder}만원`;
-        }
-      } else {
-        return `${eok}억 ${remainder}만원`;
-      }
-    } else if (num >= 1000) {
-      // 1천만 이상
-      const thousand = Math.floor(num / 1000);
-      const remainder = num % 1000;
-      if (remainder === 0) {
-        return `${thousand}천만원`;
-      } else {
-        return `${thousand}천 ${remainder}만원`;
-      }
-    } else {
-      return `${num}만원`;
-    }
-  };
+  // 통화 포맷팅 훅 사용
+  const { formatCurrency } = useCurrency();
 
   const generateDetailedSimulation = () => {
     const income = parseInt(formData.monthlyIncome) || 0;
@@ -570,34 +417,30 @@ const AssetSimulation = () => {
                     입력 진행률
                   </span>
                   <span className="text-sm font-bold text-blue-600">
-                    {calculateProgress()}%
+                    {progress}%
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500 ease-in-out"
-                    style={{ width: `${calculateProgress()}%` }}
+                    style={{ width: `${progress}%` }}
                   ></div>
                 </div>
 
                 {/* 격려 메시지 */}
                 <div
                   className={`text-center p-3 rounded-lg bg-gradient-to-r ${
-                    calculateProgress() === 100
+                    progress === 100
                       ? 'from-green-50 to-blue-50 border border-green-200'
                       : 'from-blue-50 to-purple-50 border border-blue-200'
                   }`}
                 >
                   <div className="flex items-center justify-center space-x-2">
                     <span className="text-2xl">
-                      {getEncouragementMessage().icon}
+                      {encouragementMessage.icon}
                     </span>
-                    <p
-                      className={`font-medium ${
-                        getEncouragementMessage().color
-                      }`}
-                    >
-                      {getEncouragementMessage().message}
+                    <p className={`font-medium ${encouragementMessage.color}`}>
+                      {encouragementMessage.message}
                     </p>
                   </div>
                 </div>
