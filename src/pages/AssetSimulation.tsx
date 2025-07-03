@@ -31,6 +31,12 @@ import { useProgress } from '@/hooks/useProgress';
 import { useCollapsibleSections } from '@/hooks/useCollapsibleSections';
 import { useCurrency } from '@/hooks/useCurrency';
 import {
+  scenarios,
+  type ScenarioConfig,
+  type SimulationData,
+  type ScenarioData,
+} from '@/mocks/assetData';
+import {
   ArrowLeft,
   TrendingUp,
   Home,
@@ -57,35 +63,7 @@ import {
   Cell,
 } from 'recharts';
 
-// 타입 정의
-interface SimulationData {
-  year: string;
-  assets: number;
-  savings: number;
-  totalIncome: number;
-  totalExpense: number;
-  netWorth: number;
-  canBuyWorst: boolean;
-  canBuyAverage: boolean;
-  canBuyBest: boolean;
-}
-
-interface ScenarioConfig {
-  incomeGrowthRate: number;
-  expenseGrowthRate: number;
-  investmentReturn: number;
-  inflationRate: number;
-  name: string;
-  color: string;
-}
-
-interface ScenarioData {
-  assets: number;
-  income: number;
-  expense: number;
-  savings: number;
-  canBuy: boolean;
-}
+// 타입 정의는 mocks/assetData.ts에서 import
 
 const AssetSimulation = () => {
   const { formData, handleInputChange } = useFormData({
@@ -113,33 +91,7 @@ const AssetSimulation = () => {
     future: false,
   });
 
-  // 시나리오 설정
-  const scenarios: Record<string, ScenarioConfig> = {
-    worst: {
-      incomeGrowthRate: 1,
-      expenseGrowthRate: 4,
-      investmentReturn: 2,
-      inflationRate: 4,
-      name: '최악의 시나리오',
-      color: '#ef4444',
-    },
-    average: {
-      incomeGrowthRate: 3,
-      expenseGrowthRate: 2.5,
-      investmentReturn: 5,
-      inflationRate: 2.5,
-      name: '평균 시나리오',
-      color: '#3b82f6',
-    },
-    best: {
-      incomeGrowthRate: 5,
-      expenseGrowthRate: 1.5,
-      investmentReturn: 8,
-      inflationRate: 2,
-      name: '최선의 시나리오',
-      color: '#10b981',
-    },
-  };
+  // 시나리오 설정은 mocks/assetData.ts에서 import
 
   // 숫자 입력 검증 훅 사용
   const { handleNumberKeyDown, handleNumberPaste } = useNumberInput();

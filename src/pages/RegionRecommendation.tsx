@@ -30,6 +30,7 @@ import { useNumberInput } from '@/hooks/useNumberInput';
 import { useProgress } from '@/hooks/useProgress';
 import { useCollapsibleSections } from '@/hooks/useCollapsibleSections';
 import { useCurrency } from '@/hooks/useCurrency';
+import { mockRegionRecommendations, type RegionInfo } from '@/mocks/regionData';
 import {
   ArrowLeft,
   MapPin,
@@ -56,47 +57,7 @@ import {
 import { Link } from 'react-router-dom';
 import GoogleMap from '@/components/GoogleMap';
 
-// 확장된 지역 정보 타입
-interface RegionInfo {
-  name: string;
-  averagePrice: string;
-  priceChange: string;
-  matchScore: number;
-  coordinates: { lat: number; lng: number };
-
-  // 세분화된 평가 항목들
-  scores: {
-    education: number; // 교육환경
-    transport: number; // 교통편의
-    infrastructure: number; // 생활인프라
-    safety: number; // 치안/안전
-    environment: number; // 환경/자연
-    culture: number; // 문화/여가
-    commercial: number; // 상업시설
-    medical: number; // 의료시설
-    lifestyle: number; // 생활편의
-    community: number; // 커뮤니티/이웃
-  };
-
-  // 상세 정보
-  details: {
-    schools: string[];
-    hospitals: string[];
-    shopping: string[];
-    restaurants: string[];
-    parks: string[];
-    cultural: string[];
-    transport: string[];
-    safety: string[];
-  };
-
-  highlights: string[];
-  priceAnalysis: {
-    futureProspect: string;
-    developmentPlan: string[];
-    marketTrend: string;
-  };
-}
+// 확장된 지역 정보 타입은 mocks/regionData.ts에서 import
 
 const RegionRecommendation = () => {
   const { formData, handleInputChange } = useFormData({
@@ -173,146 +134,8 @@ const RegionRecommendation = () => {
   const generateRecommendations = () => {
     const budget = parseInt(formData.budget) || 0;
 
-    const mockRecommendations: RegionInfo[] = [
-      {
-        name: '성남시 분당구',
-        averagePrice: '6억 2천만원',
-        priceChange: '+3.2%',
-        matchScore: 92,
-        coordinates: { lat: 37.3595, lng: 127.1052 },
-        scores: {
-          education: 9.4,
-          transport: 8.7,
-          infrastructure: 9.1,
-          safety: 9.0,
-          environment: 8.8,
-          culture: 8.5,
-          commercial: 9.2,
-          medical: 9.3,
-          lifestyle: 8.9,
-          community: 8.6,
-        },
-        details: {
-          schools: ['분당중앙고 (전국 10위)', '분당경영고', '야탑고', '수내고'],
-          hospitals: ['분당서울대병원', '차병원', '분당제생병원'],
-          shopping: ['AK플라자 분당점', '현대백화점 판교점', '야탑역 지하상가'],
-          restaurants: [
-            '정자동 맛집거리',
-            '수내역 카페거리',
-            '판교 테크노밸리',
-          ],
-          parks: ['중앙공원', '탄천', '율동공원', '백현공원'],
-          cultural: ['분당문화원', '성남아트센터', '판교박물관'],
-          transport: ['분당선', '수인분당선', '신분당선', '시내버스 45개 노선'],
-          safety: ['CCTV 밀도 높음', '치안센터 12개소', '야간순찰 활발'],
-        },
-        highlights: [
-          'IT/금융 중심지',
-          '우수한 교육환경',
-          '체계적 도시계획',
-          '높은 거주만족도',
-        ],
-        priceAnalysis: {
-          futureProspect: '안정적 상승 전망',
-          developmentPlan: [
-            '판교 제2테크노밸리',
-            '위례신도시 연계',
-            '지하철 연장',
-          ],
-          marketTrend: '수요 지속, 공급 제한적',
-        },
-      },
-      {
-        name: '용인시 수지구',
-        averagePrice: '4억 8천만원',
-        priceChange: '+2.1%',
-        matchScore: 87,
-        coordinates: { lat: 37.3217, lng: 127.0928 },
-        scores: {
-          education: 8.9,
-          transport: 7.8,
-          infrastructure: 8.4,
-          safety: 8.7,
-          environment: 9.2,
-          culture: 7.9,
-          commercial: 8.1,
-          medical: 8.3,
-          lifestyle: 8.5,
-          community: 8.8,
-        },
-        details: {
-          schools: ['수지고', '풍덕고', '상현고', '동천고'],
-          hospitals: [
-            '용인세브란스병원',
-            '수지구보건소',
-            '상급병원 접근성 양호',
-          ],
-          shopping: ['수지구청역 상권', '동천역 상권', '성복역 상권'],
-          restaurants: ['수지 맛집단지', '상현동 카페거리', '동천역 먹거리'],
-          parks: ['수지레스피아', '신봉산', '정평동 근린공원'],
-          cultural: ['용인문화원 수지지부', '수지레스피아', '용인자연휴양림'],
-          transport: ['신분당선', '경강선', '시내버스', '마을버스'],
-          safety: ['안전마을 조성', '여성안심귀가 서비스', 'LED 보안등'],
-        },
-        highlights: [
-          '교육특구',
-          '자연친화적 환경',
-          '신분당선 수혜',
-          '상대적 합리적 가격',
-        ],
-        priceAnalysis: {
-          futureProspect: '점진적 상승 예상',
-          developmentPlan: ['GTX-A 연장 계획', '동백지구 개발', '교통망 확충'],
-          marketTrend: '젊은층 선호, 가성비 우수',
-        },
-      },
-      {
-        name: '인천시 연수구',
-        averagePrice: '3억 9천만원',
-        priceChange: '+1.8%',
-        matchScore: 84,
-        coordinates: { lat: 37.4106, lng: 126.6779 },
-        scores: {
-          education: 8.3,
-          transport: 8.9,
-          infrastructure: 9.0,
-          safety: 8.5,
-          environment: 8.7,
-          culture: 8.8,
-          commercial: 8.6,
-          medical: 8.2,
-          lifestyle: 8.4,
-          community: 8.1,
-        },
-        details: {
-          schools: ['연수고', '송도고', '채드윅국제학교', '연수국제학교'],
-          hospitals: ['가천대 길병원', '인천사랑병원', '연수구보건소'],
-          shopping: [
-            '송도 센트럴파크몰',
-            '현대프리미엄아울렛',
-            '연수구청 상권',
-          ],
-          restaurants: ['송도 국제거리', '옥련동 맛집', '연수구청역 먹거리'],
-          parks: ['센트럴파크', '송도달빛축제공원', '인천대공원'],
-          cultural: ['송도컨벤시아', '트라이볼', '인천아시아드 주경기장'],
-          transport: ['인천1호선', '수인분당선', '공항철도', '시내외버스'],
-          safety: ['송도신도시 계획도시', '스마트시티 시스템', '24시간 보안'],
-        },
-        highlights: [
-          '송도국제도시',
-          '인천공항 접근성',
-          '계획도시',
-          '국제적 환경',
-        ],
-        priceAnalysis: {
-          futureProspect: '장기적 성장 잠재력',
-          developmentPlan: ['송도 11공구', '청라-영종 연결', '제3연륙교'],
-          marketTrend: '국제도시 매력, 투자가치 상승',
-        },
-      },
-    ];
-
-    setRecommendations(mockRecommendations);
+    // 실제로는 formData를 기반으로 필터링하는 로직이 들어갈 수 있습니다
+    setRecommendations(mockRegionRecommendations);
     setShowResults(true);
   };
 

@@ -30,6 +30,7 @@ import { useNumberInput } from '@/hooks/useNumberInput';
 import { useProgress } from '@/hooks/useProgress';
 import { useCollapsibleSections } from '@/hooks/useCollapsibleSections';
 import { useCurrency } from '@/hooks/useCurrency';
+import { createMockLoanProducts, type LoanProduct } from '@/mocks/loanData';
 import {
   ArrowLeft,
   PiggyBank,
@@ -64,30 +65,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-
-interface LoanProduct {
-  id: string;
-  name: string;
-  type: string;
-  category: 'government' | 'bank' | 'policy';
-  maxLTV: number;
-  maxDTI: number;
-  maxDSR: number;
-  baseRate: number;
-  additionalRate: number;
-  finalRate: number;
-  maxAmount: number;
-  minAmount: number;
-  maxTerm: number;
-  eligible: boolean;
-  eligibilityReason?: string;
-  monthlyPayment: number;
-  totalInterest: number;
-  guaranteeFee: number;
-  conditions: string[];
-  benefits: string[];
-  restrictions: string[];
-}
 
 interface SimulationData {
   loanAmount: number;
@@ -313,164 +290,7 @@ const LoanSimulation = () => {
     const deposit = parseInt(formData.deposit) * 10000 || 0;
     const workExp = parseInt(formData.workExperience) || 0;
 
-    const loanProducts: LoanProduct[] = [
-      // 정부 지원 대출
-      {
-        id: 'stepping_stone',
-        name: '디딤돌 대출',
-        type: '정부지원 주택구입자금',
-        category: 'government',
-        maxLTV: 80,
-        maxDTI: 60,
-        maxDSR: 40,
-        baseRate: 1.95,
-        additionalRate: 0,
-        finalRate: 0,
-        maxAmount: Math.min((housePrice - deposit) * 0.8, 250000000),
-        minAmount: 50000000,
-        maxTerm: 30,
-        eligible: false,
-        monthlyPayment: 0,
-        totalInterest: 0,
-        guaranteeFee: 0,
-        conditions: [
-          '신혼부부 또는 2자녀 이상',
-          '연소득 8천만원 이하',
-          '생애최초 주택구입',
-          '부부합산 순자산 3.45억원 이하',
-        ],
-        benefits: ['중도상환수수료 면제', '보증료 우대', '금리 우대'],
-        restrictions: ['실거주 목적', '6개월 이내 입주', '전매 제한'],
-      },
-      {
-        id: 'bogeumjari',
-        name: '보금자리론',
-        type: '정부지원 주택구입자금',
-        category: 'government',
-        maxLTV: 70,
-        maxDTI: 60,
-        maxDSR: 40,
-        baseRate: 2.25,
-        additionalRate: 0,
-        finalRate: 0,
-        maxAmount: Math.min((housePrice - deposit) * 0.7, 300000000),
-        minAmount: 50000000,
-        maxTerm: 30,
-        eligible: false,
-        monthlyPayment: 0,
-        totalInterest: 0,
-        guaranteeFee: 0,
-        conditions: [
-          '무주택자',
-          '연소득 7천만원 이하',
-          '부부합산 순자산 5.29억원 이하',
-        ],
-        benefits: ['중도상환수수료 면제', '보증료 0.2% 우대'],
-        restrictions: ['실거주 목적', '2년 실거주 의무'],
-      },
-      {
-        id: 'jeonse_loan',
-        name: '버팀목 전세자금대출',
-        type: '정부지원 전세자금',
-        category: 'government',
-        maxLTV: 80,
-        maxDTI: 60,
-        maxDSR: 40,
-        baseRate: 1.8,
-        additionalRate: 0,
-        finalRate: 0,
-        maxAmount: Math.min(housePrice * 0.8, 200000000),
-        minAmount: 10000000,
-        maxTerm: 2,
-        eligible: false,
-        monthlyPayment: 0,
-        totalInterest: 0,
-        guaranteeFee: 0,
-        conditions: [
-          '무주택자',
-          '연소득 5천만원 이하',
-          '임차보증금 5억원 이하',
-        ],
-        benefits: ['중도상환수수료 면제', '만기 연장 가능'],
-        restrictions: ['실거주 목적', '임대차계약서 필수'],
-      },
-      // 은행 대출
-      {
-        id: 'mortgage_fixed',
-        name: '주택담보대출 (고정금리)',
-        type: '시중은행 주택담보',
-        category: 'bank',
-        maxLTV: 60,
-        maxDTI: 50,
-        maxDSR: 40,
-        baseRate: 4.2,
-        additionalRate: 0.5,
-        finalRate: 0,
-        maxAmount: (housePrice - deposit) * 0.6,
-        minAmount: 30000000,
-        maxTerm: 30,
-        eligible: false,
-        monthlyPayment: 0,
-        totalInterest: 0,
-        guaranteeFee: 0,
-        conditions: ['정규소득 증빙', '재직 6개월 이상', '신용등급 4등급 이상'],
-        benefits: ['금리 확정성', '중도상환 자유'],
-        restrictions: ['DSR 규제 적용', '담보인정비율 적용'],
-      },
-      {
-        id: 'mortgage_variable',
-        name: '주택담보대출 (변동금리)',
-        type: '시중은행 주택담보',
-        category: 'bank',
-        maxLTV: 70,
-        maxDTI: 50,
-        maxDSR: 40,
-        baseRate: 3.8,
-        additionalRate: 0.3,
-        finalRate: 0,
-        maxAmount: (housePrice - deposit) * 0.7,
-        minAmount: 30000000,
-        maxTerm: 30,
-        eligible: false,
-        monthlyPayment: 0,
-        totalInterest: 0,
-        guaranteeFee: 0,
-        conditions: ['정규소득 증빙', '재직 6개월 이상', '신용등급 4등급 이상'],
-        benefits: ['낮은 초기 금리', '금리 하락 시 혜택'],
-        restrictions: ['DSR 규제 적용', '금리 변동 위험'],
-      },
-      // 정책 대출
-      {
-        id: 'youth_loan',
-        name: '청년 우대형 주택담보대출',
-        type: '청년 정책대출',
-        category: 'policy',
-        maxLTV: 90,
-        maxDTI: 60,
-        maxDSR: 50,
-        baseRate: 3.5,
-        additionalRate: -0.5,
-        finalRate: 0,
-        maxAmount: Math.min((housePrice - deposit) * 0.9, 400000000),
-        minAmount: 50000000,
-        maxTerm: 30,
-        eligible: false,
-        monthlyPayment: 0,
-        totalInterest: 0,
-        guaranteeFee: 0,
-        conditions: [
-          '만 34세 이하',
-          '연소득 7천만원 이하',
-          '신용등급 6등급 이상',
-        ],
-        benefits: [
-          '높은 LTV 적용',
-          '금리 우대 0.5%p',
-          '중도상환수수료 50% 감면',
-        ],
-        restrictions: ['나이 제한', '소득 제한'],
-      },
-    ];
+    const loanProducts = createMockLoanProducts(housePrice, deposit);
 
     // 자격 조건 및 대출 한도 계산
     loanProducts.forEach((loan) => {
