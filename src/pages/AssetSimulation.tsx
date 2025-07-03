@@ -78,6 +78,10 @@ const AssetSimulation = () => {
     expenseGrowthRate: '2', // 연간 지출 증가율
     investmentReturn: '5', // 투자 수익률
     targetHousePrice: '50000', // 목표 주택 가격 (만원)
+    // 커스텀 입력 필드 추가
+    customIncomeGrowthRate: '',
+    customExpenseGrowthRate: '',
+    customInvestmentReturn: '',
   });
 
   const [simulationData, setSimulationData] = useState<SimulationData[]>([]);
@@ -125,6 +129,22 @@ const AssetSimulation = () => {
     const currentAssets = parseInt(formData.currentAssets) || 0;
     const targetHousePrice = parseInt(formData.targetHousePrice) || 50000;
 
+    // 커스텀 값이 있으면 사용, 없으면 기본 값 사용
+    const userIncomeGrowthRate =
+      formData.incomeGrowthRate === 'custom'
+        ? parseFloat(formData.customIncomeGrowthRate) || 3
+        : parseFloat(formData.incomeGrowthRate) || 3;
+
+    const userExpenseGrowthRate =
+      formData.expenseGrowthRate === 'custom'
+        ? parseFloat(formData.customExpenseGrowthRate) || 2
+        : parseFloat(formData.expenseGrowthRate) || 2;
+
+    const userInvestmentReturn =
+      formData.investmentReturn === 'custom'
+        ? parseFloat(formData.customInvestmentReturn) || 5
+        : parseFloat(formData.investmentReturn) || 5;
+
     const data: SimulationData[] = [];
 
     for (let year = 0; year <= 15; year++) {
@@ -132,9 +152,22 @@ const AssetSimulation = () => {
       const scenarios_data: Record<string, any> = {};
 
       Object.entries(scenarios).forEach(([key, scenario]) => {
-        const yearlyIncomeGrowth = scenario.incomeGrowthRate / 100;
-        const yearlyExpenseGrowth = scenario.expenseGrowthRate / 100;
-        const yearlyReturn = scenario.investmentReturn / 100;
+        // 사용자 설정값을 기준으로 시나리오 조정
+        let yearlyIncomeGrowth = userIncomeGrowthRate / 100;
+        let yearlyExpenseGrowth = userExpenseGrowthRate / 100;
+        let yearlyReturn = userInvestmentReturn / 100;
+
+        // 시나리오별 조정 (사용자 기본값 기준으로 상대적 조정)
+        if (key === 'worst') {
+          yearlyIncomeGrowth = Math.max(0, yearlyIncomeGrowth - 0.02); // 2%p 감소
+          yearlyExpenseGrowth = yearlyExpenseGrowth + 0.015; // 1.5%p 증가
+          yearlyReturn = Math.max(0.01, yearlyReturn - 0.03); // 3%p 감소 (최소 1%)
+        } else if (key === 'best') {
+          yearlyIncomeGrowth = yearlyIncomeGrowth + 0.02; // 2%p 증가
+          yearlyExpenseGrowth = Math.max(0.005, yearlyExpenseGrowth - 0.005); // 0.5%p 감소
+          yearlyReturn = yearlyReturn + 0.03; // 3%p 증가
+        }
+        // average는 사용자 설정값 그대로 사용
 
         // 해당 연도의 월 수입/지출
         const currentIncome = income * Math.pow(1 + yearlyIncomeGrowth, year);
@@ -194,11 +227,40 @@ const AssetSimulation = () => {
     const expense = parseInt(formData.monthlyExpense) || 0;
     const currentAssets = parseInt(formData.currentAssets) || 0;
 
+    // 커스텀 값이 있으면 사용, 없으면 기본 값 사용
+    const userIncomeGrowthRate =
+      formData.incomeGrowthRate === 'custom'
+        ? parseFloat(formData.customIncomeGrowthRate) || 3
+        : parseFloat(formData.incomeGrowthRate) || 3;
+
+    const userExpenseGrowthRate =
+      formData.expenseGrowthRate === 'custom'
+        ? parseFloat(formData.customExpenseGrowthRate) || 2
+        : parseFloat(formData.expenseGrowthRate) || 2;
+
+    const userInvestmentReturn =
+      formData.investmentReturn === 'custom'
+        ? parseFloat(formData.customInvestmentReturn) || 5
+        : parseFloat(formData.investmentReturn) || 5;
+
     return simulationData.map((item, index) => {
       const year = index;
-      const yearlyIncomeGrowth = config.incomeGrowthRate / 100;
-      const yearlyExpenseGrowth = config.expenseGrowthRate / 100;
-      const yearlyReturn = config.investmentReturn / 100;
+
+      // 사용자 설정값을 기준으로 시나리오 조정
+      let yearlyIncomeGrowth = userIncomeGrowthRate / 100;
+      let yearlyExpenseGrowth = userExpenseGrowthRate / 100;
+      let yearlyReturn = userInvestmentReturn / 100;
+
+      // 시나리오별 조정
+      if (scenario === 'worst') {
+        yearlyIncomeGrowth = Math.max(0, yearlyIncomeGrowth - 0.02);
+        yearlyExpenseGrowth = yearlyExpenseGrowth + 0.015;
+        yearlyReturn = Math.max(0.01, yearlyReturn - 0.03);
+      } else if (scenario === 'best') {
+        yearlyIncomeGrowth = yearlyIncomeGrowth + 0.02;
+        yearlyExpenseGrowth = Math.max(0.005, yearlyExpenseGrowth - 0.005);
+        yearlyReturn = yearlyReturn + 0.03;
+      }
 
       const currentIncome = income * Math.pow(1 + yearlyIncomeGrowth, year);
       const currentExpense = expense * Math.pow(1 + yearlyExpenseGrowth, year);
@@ -367,7 +429,35 @@ const AssetSimulation = () => {
 
               {/* 미래 전망 설정 */}
               <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900">미래 전망 설정</h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-gray-900">
+                    미래 전망 설정
+                  </h4>
+                  {(formData.incomeGrowthRate === 'custom' ||
+                    formData.expenseGrowthRate === 'custom' ||
+                    formData.investmentReturn === 'custom') && (
+                    <Badge
+                      variant="secondary"
+                      className="text-xs bg-blue-100 text-blue-700"
+                    >
+                      🎯 사용자 정의 설정
+                    </Badge>
+                  )}
+                </div>
+                {(formData.incomeGrowthRate === 'custom' ||
+                  formData.expenseGrowthRate === 'custom' ||
+                  formData.investmentReturn === 'custom') && (
+                  <Alert className="bg-blue-50 border-blue-200">
+                    <AlertTriangle className="h-4 w-4 text-blue-600" />
+                    <AlertDescription className="text-blue-800">
+                      <div className="font-medium">💡 고급 설정 활성화</div>
+                      <div className="text-sm mt-1">
+                        사용자 정의 값을 설정하셨습니다. 시나리오 분석 시 이
+                        값들을 기준으로 상대적 변화를 적용합니다.
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="incomeGrowthRate">
@@ -389,8 +479,26 @@ const AssetSimulation = () => {
                         <SelectItem value="3">3% (평균적)</SelectItem>
                         <SelectItem value="4">4% (적극적)</SelectItem>
                         <SelectItem value="5">5% (낙관적)</SelectItem>
+                        <SelectItem value="custom">🎯 직접 입력</SelectItem>
                       </SelectContent>
                     </Select>
+                    {formData.incomeGrowthRate === 'custom' && (
+                      <Input
+                        type="number"
+                        placeholder="예: 8 (고소득자/승진 예상)"
+                        value={formData.customIncomeGrowthRate}
+                        onChange={(e) =>
+                          handleInputChange(
+                            'customIncomeGrowthRate',
+                            e.target.value
+                          )
+                        }
+                        className="mt-2"
+                        min="0"
+                        max="50"
+                        step="0.1"
+                      />
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -413,8 +521,26 @@ const AssetSimulation = () => {
                         <SelectItem value="2.5">2.5% (일반형)</SelectItem>
                         <SelectItem value="3">3% (소비형)</SelectItem>
                         <SelectItem value="4">4% (인플레이션)</SelectItem>
+                        <SelectItem value="custom">🎯 직접 입력</SelectItem>
                       </SelectContent>
                     </Select>
+                    {formData.expenseGrowthRate === 'custom' && (
+                      <Input
+                        type="number"
+                        placeholder="예: 0.5 (초절약형)"
+                        value={formData.customExpenseGrowthRate}
+                        onChange={(e) =>
+                          handleInputChange(
+                            'customExpenseGrowthRate',
+                            e.target.value
+                          )
+                        }
+                        className="mt-2"
+                        min="0"
+                        max="20"
+                        step="0.1"
+                      />
+                    )}
                   </div>
                 </div>
 
@@ -437,8 +563,31 @@ const AssetSimulation = () => {
                       <SelectItem value="6">6% (주식형 펀드)</SelectItem>
                       <SelectItem value="7">7% (직접 투자)</SelectItem>
                       <SelectItem value="8">8% (적극적 투자)</SelectItem>
+                      <SelectItem value="custom">🎯 직접 입력</SelectItem>
                     </SelectContent>
                   </Select>
+                  {formData.investmentReturn === 'custom' && (
+                    <div className="space-y-2">
+                      <Input
+                        type="number"
+                        placeholder="예: 12 (부동산/주식 고수익)"
+                        value={formData.customInvestmentReturn}
+                        onChange={(e) =>
+                          handleInputChange(
+                            'customInvestmentReturn',
+                            e.target.value
+                          )
+                        }
+                        className="mt-2"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                      />
+                      <p className="text-xs text-gray-500">
+                        💡 참고: 암호화폐(15-30%), 성장주(10-15%), 부동산(8-12%)
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -495,6 +644,43 @@ const AssetSimulation = () => {
                 {Object.entries(scenarios).map(([key, scenario]) => {
                   const achievementYear = getTargetAchievementYear(key);
 
+                  // 사용자 커스텀 값 반영
+                  const userIncomeGrowthRate =
+                    formData.incomeGrowthRate === 'custom'
+                      ? parseFloat(formData.customIncomeGrowthRate) || 3
+                      : parseFloat(formData.incomeGrowthRate) || 3;
+
+                  const userExpenseGrowthRate =
+                    formData.expenseGrowthRate === 'custom'
+                      ? parseFloat(formData.customExpenseGrowthRate) || 2
+                      : parseFloat(formData.expenseGrowthRate) || 2;
+
+                  const userInvestmentReturn =
+                    formData.investmentReturn === 'custom'
+                      ? parseFloat(formData.customInvestmentReturn) || 5
+                      : parseFloat(formData.investmentReturn) || 5;
+
+                  // 시나리오별 실제 적용값 계산
+                  let actualIncomeGrowth = userIncomeGrowthRate;
+                  let actualExpenseGrowth = userExpenseGrowthRate;
+                  let actualInvestmentReturn = userInvestmentReturn;
+
+                  if (key === 'worst') {
+                    actualIncomeGrowth = Math.max(0, userIncomeGrowthRate - 2);
+                    actualExpenseGrowth = userExpenseGrowthRate + 1.5;
+                    actualInvestmentReturn = Math.max(
+                      1,
+                      userInvestmentReturn - 3
+                    );
+                  } else if (key === 'best') {
+                    actualIncomeGrowth = userIncomeGrowthRate + 2;
+                    actualExpenseGrowth = Math.max(
+                      0.5,
+                      userExpenseGrowthRate - 0.5
+                    );
+                    actualInvestmentReturn = userInvestmentReturn + 3;
+                  }
+
                   return (
                     <div
                       key={key}
@@ -526,25 +712,44 @@ const AssetSimulation = () => {
                         <div>
                           <span className="text-gray-600">수입 증가:</span>
                           <span className="font-semibold ml-2">
-                            {scenario.incomeGrowthRate}%/년
+                            {actualIncomeGrowth.toFixed(1)}%/년
                           </span>
+                          {formData.incomeGrowthRate === 'custom' && (
+                            <span className="text-xs text-blue-600 ml-1">
+                              (사용자 설정)
+                            </span>
+                          )}
                         </div>
                         <div>
                           <span className="text-gray-600">지출 증가:</span>
                           <span className="font-semibold ml-2">
-                            {scenario.expenseGrowthRate}%/년
+                            {actualExpenseGrowth.toFixed(1)}%/년
                           </span>
+                          {formData.expenseGrowthRate === 'custom' && (
+                            <span className="text-xs text-blue-600 ml-1">
+                              (사용자 설정)
+                            </span>
+                          )}
                         </div>
                         <div>
                           <span className="text-gray-600">투자 수익:</span>
                           <span className="font-semibold ml-2">
-                            {scenario.investmentReturn}%/년
+                            {actualInvestmentReturn.toFixed(1)}%/년
                           </span>
+                          {formData.investmentReturn === 'custom' && (
+                            <span className="text-xs text-blue-600 ml-1">
+                              (사용자 설정)
+                            </span>
+                          )}
                         </div>
                         <div>
-                          <span className="text-gray-600">인플레이션:</span>
+                          <span className="text-gray-600">시나리오:</span>
                           <span className="font-semibold ml-2">
-                            {scenario.inflationRate}%/년
+                            {key === 'worst'
+                              ? '보수적'
+                              : key === 'best'
+                              ? '낙관적'
+                              : '기준값'}
                           </span>
                         </div>
                       </div>
