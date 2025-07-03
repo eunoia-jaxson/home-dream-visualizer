@@ -161,6 +161,41 @@ const SubscriptionCalculator = () => {
     }));
   };
 
+  // 0 이상의 숫자만 입력 가능하도록 하는 함수
+  const handleNumberKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // 허용된 키: 숫자(0-9), 백스페이스, 삭제, 탭, 화살표 키, Home, End
+    const allowedKeys = [
+      'Backspace',
+      'Delete',
+      'Tab',
+      'ArrowLeft',
+      'ArrowRight',
+      'ArrowUp',
+      'ArrowDown',
+      'Home',
+      'End',
+    ];
+
+    // 숫자 키 (0-9)와 허용된 키가 아니면 입력 차단
+    if (!allowedKeys.includes(e.key) && (e.key < '0' || e.key > '9')) {
+      e.preventDefault();
+    }
+
+    // 마이너스(-), 플러스(+), 점(.), 'e', 'E' 등 특수문자 차단
+    if (['-', '+', '.', 'e', 'E'].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  // 붙여넣기 시 0 이상의 숫자만 허용
+  const handleNumberPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedText = e.clipboardData.getData('text');
+    // 숫자가 아니거나 음수면 붙여넣기 차단
+    if (!/^\d+$/.test(pastedText) || parseInt(pastedText) < 0) {
+      e.preventDefault();
+    }
+  };
+
   // 만원 단위를 읽기 쉬운 형태로 변환하는 함수
   const formatCurrency = (amount: string | number) => {
     const num = typeof amount === 'string' ? parseInt(amount) : amount;
@@ -443,6 +478,9 @@ const SubscriptionCalculator = () => {
             onChange={(e) =>
               handleInputChange('householdPeriod', e.target.value)
             }
+            onKeyDown={handleNumberKeyDown}
+            onPaste={handleNumberPaste}
+            min="0"
           />
         </div>
 
@@ -454,6 +492,9 @@ const SubscriptionCalculator = () => {
             placeholder="예: 2"
             value={formData.dependents}
             onChange={(e) => handleInputChange('dependents', e.target.value)}
+            onKeyDown={handleNumberKeyDown}
+            onPaste={handleNumberPaste}
+            min="0"
           />
         </div>
 
@@ -467,6 +508,9 @@ const SubscriptionCalculator = () => {
             onChange={(e) =>
               handleInputChange('subscriptionPeriod', e.target.value)
             }
+            onKeyDown={handleNumberKeyDown}
+            onPaste={handleNumberPaste}
+            min="0"
           />
         </div>
 
@@ -483,6 +527,9 @@ const SubscriptionCalculator = () => {
                 onChange={(e) =>
                   handleInputChange('marriagePeriod', e.target.value)
                 }
+                onKeyDown={handleNumberKeyDown}
+                onPaste={handleNumberPaste}
+                min="0"
               />
             </div>
             <div className="space-y-2">
@@ -495,6 +542,9 @@ const SubscriptionCalculator = () => {
                 onChange={(e) =>
                   handleInputChange('monthlyIncome', e.target.value)
                 }
+                onKeyDown={handleNumberKeyDown}
+                onPaste={handleNumberPaste}
+                min="0"
               />
               {formData.monthlyIncome && (
                 <p className="text-sm text-blue-600 font-medium">
@@ -512,6 +562,9 @@ const SubscriptionCalculator = () => {
                 onChange={(e) =>
                   handleInputChange('totalAssets', e.target.value)
                 }
+                onKeyDown={handleNumberKeyDown}
+                onPaste={handleNumberPaste}
+                min="0"
               />
               {formData.totalAssets && (
                 <p className="text-sm text-green-600 font-medium">
@@ -532,6 +585,9 @@ const SubscriptionCalculator = () => {
                 placeholder="예: 35"
                 value={formData.age}
                 onChange={(e) => handleInputChange('age', e.target.value)}
+                onKeyDown={handleNumberKeyDown}
+                onPaste={handleNumberPaste}
+                min="0"
               />
             </div>
             <div className="space-y-2">
@@ -544,6 +600,9 @@ const SubscriptionCalculator = () => {
                 onChange={(e) =>
                   handleInputChange('taxPaymentPeriod', e.target.value)
                 }
+                onKeyDown={handleNumberKeyDown}
+                onPaste={handleNumberPaste}
+                min="0"
               />
             </div>
           </>
@@ -560,6 +619,9 @@ const SubscriptionCalculator = () => {
               onChange={(e) =>
                 handleInputChange('childrenCount', e.target.value)
               }
+              onKeyDown={handleNumberKeyDown}
+              onPaste={handleNumberPaste}
+              min="0"
             />
           </div>
         )}
@@ -575,6 +637,9 @@ const SubscriptionCalculator = () => {
               onChange={(e) =>
                 handleInputChange('parentSupportPeriod', e.target.value)
               }
+              onKeyDown={handleNumberKeyDown}
+              onPaste={handleNumberPaste}
+              min="0"
             />
           </div>
         )}
