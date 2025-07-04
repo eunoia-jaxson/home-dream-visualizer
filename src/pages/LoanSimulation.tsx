@@ -30,7 +30,8 @@ import { useNumberInput } from '@/hooks/useNumberInput';
 import { useProgress } from '@/hooks/useProgress';
 import { useCollapsibleSections } from '@/hooks/useCollapsibleSections';
 import { useCurrency } from '@/hooks/useCurrency';
-import { createMockLoanProducts, type LoanProduct } from '@/mocks/loanData';
+import { createMockLoanProducts } from '@/mocks/loanData';
+import type { LoanProduct, SimulationData } from '@/types/loan';
 import {
   ArrowLeft,
   PiggyBank,
@@ -66,28 +67,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-interface SimulationData {
-  loanAmount: number;
-  term: number;
-  rateType: 'fixed' | 'variable' | 'mixed';
-  repaymentType: 'equal_payment' | 'equal_principal' | 'bullet';
-  scenario: 'best' | 'normal' | 'worst';
-  monthlyPayments: Array<{
-    month: number;
-    payment: number;
-    principal: number;
-    interest: number;
-    balance: number;
-    rate: number;
-  }>;
-  summary: {
-    totalPayment: number;
-    totalInterest: number;
-    averageRate: number;
-    maxPayment: number;
-    minPayment: number;
-  };
-}
+// SimulationData 타입은 @/types/loan에서 LoanSimulationData로 사용
 
 const LoanSimulation = () => {
   const { formData, handleInputChange } = useFormData({

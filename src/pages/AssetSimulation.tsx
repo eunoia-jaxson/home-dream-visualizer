@@ -30,12 +30,12 @@ import { useNumberInput } from '@/hooks/useNumberInput';
 import { useProgress } from '@/hooks/useProgress';
 import { useCollapsibleSections } from '@/hooks/useCollapsibleSections';
 import { useCurrency } from '@/hooks/useCurrency';
-import {
-  scenarios,
-  type ScenarioConfig,
-  type SimulationData,
-  type ScenarioData,
-} from '@/mocks/assetData';
+import { scenarios } from '@/mocks/assetData';
+import type {
+  ScenarioConfig,
+  SimulationData,
+  ScenarioData,
+} from '@/types/asset';
 import {
   ArrowLeft,
   TrendingUp,
@@ -63,7 +63,7 @@ import {
   Cell,
 } from 'recharts';
 
-// 타입 정의는 mocks/assetData.ts에서 import
+// 타입 정의는 @/types/asset에서 import
 
 const AssetSimulation = () => {
   const { formData, handleInputChange } = useFormData({
@@ -91,7 +91,7 @@ const AssetSimulation = () => {
     future: false,
   });
 
-  // 시나리오 설정은 mocks/assetData.ts에서 import
+  // 시나리오 설정은 @/mocks/assetData에서 import
 
   // 숫자 입력 검증 훅 사용
   const { handleNumberKeyDown, handleNumberPaste } = useNumberInput();

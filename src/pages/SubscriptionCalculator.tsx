@@ -32,9 +32,8 @@ import { useCurrency } from '@/hooks/useCurrency';
 import {
   subscriptionTypes,
   generateMockRecommendations,
-  type EligibilityResult,
-  type Recommendation,
 } from '@/mocks/subscriptionData';
+import type { EligibilityResult, Recommendation } from '@/types/subscription';
 import {
   ArrowLeft,
   Calculator,
@@ -49,7 +48,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-// 타입 정의와 청약 유형별 설명 데이터는 mocks/subscriptionData.ts에서 import
+// 타입 정의는 @/types/subscription에서, 데이터는 @/mocks/subscriptionData에서 import
 
 const SubscriptionCalculator = () => {
   const [selectedType, setSelectedType] = useState<string>('');

@@ -1,26 +1,4 @@
-export interface LoanProduct {
-  id: string;
-  name: string;
-  type: string;
-  category: 'government' | 'bank' | 'policy';
-  maxLTV: number;
-  maxDTI: number;
-  maxDSR: number;
-  baseRate: number;
-  additionalRate: number;
-  finalRate: number;
-  maxAmount: number;
-  minAmount: number;
-  maxTerm: number;
-  eligible: boolean;
-  eligibilityReason?: string;
-  monthlyPayment: number;
-  totalInterest: number;
-  guaranteeFee: number;
-  conditions: string[];
-  benefits: string[];
-  restrictions: string[];
-}
+import type { LoanProduct } from '@/types/loan';
 
 export const createMockLoanProducts = (
   housePrice: number,

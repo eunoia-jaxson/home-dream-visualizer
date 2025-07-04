@@ -30,7 +30,8 @@ import { useNumberInput } from '@/hooks/useNumberInput';
 import { useProgress } from '@/hooks/useProgress';
 import { useCollapsibleSections } from '@/hooks/useCollapsibleSections';
 import { useCurrency } from '@/hooks/useCurrency';
-import { mockRegionRecommendations, type RegionInfo } from '@/mocks/regionData';
+import { mockRegionRecommendations } from '@/mocks/regionData';
+import type { RegionInfo } from '@/types/region';
 import {
   ArrowLeft,
   MapPin,
@@ -57,7 +58,7 @@ import {
 import { Link } from 'react-router-dom';
 import GoogleMap from '@/components/GoogleMap';
 
-// 확장된 지역 정보 타입은 mocks/regionData.ts에서 import
+// 지역 정보 타입은 @/types/region에서 import
 
 const RegionRecommendation = () => {
   const { formData, handleInputChange } = useFormData({
