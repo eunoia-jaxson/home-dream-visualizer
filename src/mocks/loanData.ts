@@ -149,3 +149,4 @@ export const createMockLoanProducts = (
     restrictions: ['나이 제한', '소득 제한'],
   },
 ];
+ 

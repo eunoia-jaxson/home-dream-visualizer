@@ -27,3 +27,4 @@ export const scenarios: Record<string, ScenarioConfig> = {
     color: '#10b981',
   },
 };
+ 

@@ -138,30 +138,30 @@ const LoanSimulation = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+      {/* Header */}
         <LoanSimulationHeader />
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Input Form */}
-            <Card>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Input Form */}
+          <Card>
               <CardHeader className="pb-4">
-                <CardTitle className="flex items-center space-x-2">
-                  <PiggyBank className="h-5 w-5 text-purple-600" />
-                  <span>대출 조건 입력</span>
-                </CardTitle>
-                <CardDescription>
-                  대출 시뮬레이션을 위한 정보를 입력해주세요
-                </CardDescription>
+              <CardTitle className="flex items-center space-x-2">
+                <PiggyBank className="h-5 w-5 text-purple-600" />
+                <span>대출 조건 입력</span>
+              </CardTitle>
+              <CardDescription>
+                대출 시뮬레이션을 위한 정보를 입력해주세요
+              </CardDescription>
 
                 {/* 진행률 바 */}
                 <ProgressBar
                   progress={progress}
                   encouragementMessage={encouragementMessage}
                 />
-              </CardHeader>
-              <CardContent className="space-y-6">
+            </CardHeader>
+            <CardContent className="space-y-6">
                 {/* 기본 정보 섹션 */}
                 <BasicInfoSection
                   formData={formData}
@@ -191,19 +191,19 @@ const LoanSimulation = () => {
                   toggleSection={toggleSection}
                 />
 
-                <Button
+              <Button
                   onClick={handleCalculateLoan}
-                  className="w-full bg-purple-600 hover:bg-purple-700"
-                  disabled={!formData.housePrice || !formData.monthlyIncome}
-                >
-                  대출 조건 확인하기
-                </Button>
-              </CardContent>
-            </Card>
+                className="w-full bg-purple-600 hover:bg-purple-700"
+                disabled={!formData.housePrice || !formData.monthlyIncome}
+              >
+                대출 조건 확인하기
+              </Button>
+            </CardContent>
+          </Card>
 
-            {/* Results */}
-            {showResults && (
-              <div className="space-y-6">
+          {/* Results */}
+          {showResults && (
+            <div className="space-y-6">
                 <LoanResultsCard
                   loanResults={loanResults}
                   selectedLoan={selectedLoan}
@@ -213,22 +213,22 @@ const LoanSimulation = () => {
                   }
                 />
 
-                {/* 상세 시뮬레이션 */}
-                {selectedLoan && (
+              {/* 상세 시뮬레이션 */}
+              {selectedLoan && (
                   <LoanDetailCard
                     selectedLoan={selectedLoan}
                     formatCurrency={(value: number) =>
                       formatCurrency(value.toString())
                     }
                   />
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Additional Info */}
-          {showResults && <InfoCards />}
+              )}
+            </div>
+          )}
         </div>
+
+        {/* Additional Info */}
+          {showResults && <InfoCards />}
+          </div>
       </div>
     </TooltipProvider>
   );
